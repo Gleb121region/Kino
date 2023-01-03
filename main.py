@@ -1,12 +1,11 @@
 import os
 
-from ChangeLink import ChangeLink
-from KinoPoisk import KinoPoisk
 
 from telebot.async_telebot import AsyncTeleBot
 from telebot import types
 import asyncio
 
+from KinoPoisk import KinoPoisk
 from VX import VX
 
 bot = AsyncTeleBot(os.getenv('telegram_token'))
@@ -28,15 +27,18 @@ async def send_welcome(message):
 @bot.message_handler(commands=['top'])
 async def send_top_film(message):
     kino = KinoPoisk()
-    billboard = kino.give_top_films('0')
-    await  bot.send_message(message.chat.id, billboard.do_html_code(), parse_mode='html')
+    pageNumber = int(1)
+    billboard = kino.give_top_films(pageNumber)
+    billboard.send_message_in_tg()
+    #  todo : next step…
+    for film_info in billboard.send_message_in_tg():
+        await bot.send_message(message.chat.id, film_info)
 
-
-@bot.message_handler(func=lambda message: True)
-async def echo_message(message):
-    vx = VX()
-    film_link: str = vx.get_film_link(message.text)
-    await bot.send_message(message.chat.id, film_link)
+    @bot.message_handler(func=lambda message: True)
+    async def echo_message(message):
+        vx = VX()
+        film_link: str = vx.get_film_link_by_name(message.text)
+        await bot.send_message(message.chat.id, film_link)
 
 
 if __name__ == '__main__':
