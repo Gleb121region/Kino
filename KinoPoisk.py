@@ -40,7 +40,7 @@ class KinoPoisk(object):
 
         jsonpath_name = parse('$.items[*].nameRu')
         jsonpath_film_id = parse('$.items[*].filmId')
-        jsonpath_poster = parse("$.items[*].posterUrl")
+        jsonpath_poster = parse('$.items[*].posterUrl')
 
         names = jsonpath_name.find(json_data)
         ids = jsonpath_film_id.find(json_data)
@@ -59,39 +59,39 @@ class KinoPoisk(object):
         json_string = res.text
 
         json_data = json.loads(json_string)
-        jsonpath_poster = parse("$.posterUrl")
+        jsonpath_poster = parse('$.posterUrl')
         posters = jsonpath_poster.find(json_data)
         poster = posters[0].value
 
-        jsonpath_rating = parse("$.ratingKinopoisk")
+        jsonpath_rating = parse('$.ratingKinopoisk')
         ratings = jsonpath_rating.find(json_data)
         rating = ratings[0].value
 
-        jsonpath_year = parse("$.year")
+        jsonpath_year = parse('$.year')
         years = jsonpath_year.find(json_data)
         year = years[0].value
 
-        jsonpath_description = parse("$.description")
+        jsonpath_description = parse('$.description')
         descriptions = jsonpath_description.find(json_data)
         description_data = descriptions[0].value
 
-        jsonpath_type = parse("$.type")
+        jsonpath_type = parse('$.type')
         types = jsonpath_type.find(json_data)
         data_type = types[0].value
 
-        jsonpath_county = parse("$.countries[*].country")
+        jsonpath_county = parse('$.countries[*].country')
         counties = jsonpath_county.find(json_data)
         list_counties = list(map(lambda x: x.value, counties))
 
-        jsonpath_genres = parse("$.genres[*].genre")
+        jsonpath_genres = parse('$.genres[*].genre')
         genres = jsonpath_genres.find(json_data)
         list_genres = list(map(lambda x: x.value, genres))
 
-        jsonpath_start_year = parse("$.startYear")
+        jsonpath_start_year = parse('$.startYear')
         start_years = jsonpath_start_year.find(json_data)
         start_year = start_years[0].value
 
-        jsonpath_end_year = parse("$.endYear")
+        jsonpath_end_year = parse('$.endYear')
         end_years = jsonpath_end_year.find(json_data)
         end_year = end_years[0].value
 
@@ -113,8 +113,8 @@ class KinoPoisk(object):
         json_string = res.text
 
         json_data = json.loads(json_string)
-        jsonpath_url = parse("$.items[*].url")
-        jsonpath_name = parse("$.items[*].name")
+        jsonpath_url = parse('$.items[*].url')
+        jsonpath_name = parse('$.items[*].name')
         urls = jsonpath_url.find(json_data)
         names = jsonpath_name.find(json_data)
 
@@ -130,15 +130,15 @@ class KinoPoisk(object):
         json_string = res.text
         json_data = json.loads(json_string)
 
-        jsonpath_film_id = parse("$.films[*].filmId")
+        jsonpath_film_id = parse('$.films[*].filmId')
         film_id = jsonpath_film_id.find(json_data)
-        jsonpath_name = parse("$.films[*].nameRu")
+        jsonpath_name = parse('$.films[*].nameRu')
         film_name = jsonpath_name.find(json_data)
-        jsonpath_year = parse("$.films[*].year")
+        jsonpath_year = parse('$.films[*].year')
         film_year = jsonpath_year.find(json_data)
-        jsonpath_film_len = parse("$.films[*].filmLength")
+        jsonpath_film_len = parse('$.films[*].filmLength')
         film_len = jsonpath_film_len.find(json_data)
-        jsonpath_country = parse("$.films[*].countries[*]")
+        jsonpath_country = parse('$.films[*].countries[*]')
         film_country = jsonpath_country.find(json_data)
         jsonpath_genre = parse('$.films[*].genres')
         film_genre = jsonpath_genre.find(json_data)

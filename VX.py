@@ -21,8 +21,11 @@ class VX(object):
             json_data = json.loads(json_string)
             jsonpath_expression = parse('$.data[*].iframe_src')
             match = jsonpath_expression.find(json_data)
-            list_links.append(str(match[0].value).replace("//", ''))
-        return list_links
+            if len(match) > 0:
+                list_links.append(str(match[0].value).replace("//", ''))
+            else:
+                return list_links
+            return list_links
 
     def get_film_by_kinopoisk_id(self, kinopoisk_id) -> str:
         params = dict(api_token=self.API_TOKEN, kinopoisk_id=kinopoisk_id)

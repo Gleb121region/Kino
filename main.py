@@ -68,7 +68,9 @@ async def callback_query(call):
 
 @bot.message_handler(func=lambda message: True)
 async def send_film_by_film_name(message):
-    for link in VX().get_film_link_by_name(message.text):
+    links = VX().get_film_link_by_name(message.text)
+    print(len(links))
+    for link in links:
         await bot.send_message(message.chat.id, link)
 
 
