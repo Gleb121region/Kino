@@ -19,13 +19,44 @@ class KinoPoisk(object):
     headers = {'X-API-KEY': API_TOKEN, 'Content-Type': 'application/json'}
     id_kino_poisk = ''
 
-    def get_id_kino_poisk(self, movie_name: str) -> list[str]:
+    def get_id_kino_poisk(self, movie_name: str) -> list[Cinema]:
         movie_list = Movie.objects.search(movie_name)
         list_movie = []
         for movie in movie_list:
             if movie.title == movie_name:
                 list_movie.append(movie.id)
-        return list_movie
+        list_movie_info = self.get_info_about_film_by_id_in_kino_poisk(list_id_film=list_movie)
+        return list_movie_info
+
+    def get_info_about_film_by_id_in_kino_poisk(self, list_id_film: list[str]) -> list[Cinema]:
+        list_cinema: list[Cinema] = []
+        for id_film in list_id_film:
+            url = self.URL + str(id_film)
+            res = requests.get(url=url, headers=self.headers)
+            json_string = res.text
+            json_data = json.loads(json_string)
+
+            jsonpath_name = parse('$.nameRu')
+            jsonpath_year = parse('$.year')
+            jsonpath_len = parse('$.filmLength')
+            jsonpath_country = parse('$.countries[*][*]')
+            jsonpath_genre = parse('$.genres[*][*]')
+            jsonpath_rating = parse('$.ratingKinopoisk')
+            jsonpath_poster = parse('$.posterUrl')
+
+            film_poster = jsonpath_poster.find(json_data)
+            film_rating = jsonpath_rating.find(json_data)
+            film_genre = jsonpath_genre.find(json_data)
+            film_country = jsonpath_country.find(json_data)
+            film_len = jsonpath_len.find(json_data)
+            film_year = jsonpath_year.find(json_data)
+            film_name = jsonpath_name.find(json_data)
+
+            cinema = Cinema(film_id=int(id_film), name=film_name[0].value, year=film_year[0].value,
+                            length=film_len[0].value, country=film_country[0].value, genre=film_genre[0].value,
+                            rating=film_rating[0].value, poster=film_poster[0].value)
+            list_cinema.append(cinema)
+        return list_cinema
 
     def set_id_kino_poisk(self, name: str):
         mov = Movie.objects.search(name)
