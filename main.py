@@ -6,6 +6,7 @@ import asyncio
 
 from KinoPoisk import KinoPoisk
 from VX import VX
+from kinopoisk.movie import Movie
 
 bot = AsyncTeleBot(os.getenv('telegram_token'))
 
@@ -28,16 +29,17 @@ async def send_welcome(message: types.Message):
 
     await bot.send_message(message.chat.id, message_for_user, parse_mode='html')
 
+
 #  не работает пока что
-@bot.message_handler(commands=['recommendation'])
-async def send_recommendation(message: types.Message):
-    message_for_user = 'Рекомендация основывается  на каком то фильме.' \
-                       'Введите названия фильма который вам нравится и  бот отправит схожий фильм.'
-    await bot.send_message(message.chat.id, message_for_user)
-    film_name = message.text
-    kino = KinoPoisk()
-    for i in kino.give_recommendations(film_name):
-        await bot.send_message(message.chat.id, i.send_message_in_tg())
+# @bot.message_handler(commands=['recommendation'])
+# async def send_recommendation(message: types.Message):
+#     message_for_user = 'Рекомендация основывается  на каком то фильме.' \
+#                        'Введите названия фильма который вам нравится и  бот отправит схожий фильм.'
+#     await bot.send_message(message.chat.id, message_for_user)
+#     film_name = message.text
+#     kino = KinoPoisk()
+#     for i in kino.give_recommendations(film_name):
+#         await bot.send_message(message.chat.id, i.send_message_in_tg())
 
 
 @bot.message_handler(commands=['top'])
@@ -65,9 +67,8 @@ async def callback_query(call):
 
 
 @bot.message_handler(func=lambda message: True)
-async def echo_message(message):
-    vx = VX()
-    film_link: str = vx.get_film_link_by_name(message.text)
+async def send_film_by_film_name(message):
+    film_link: str = VX().get_film_link_by_name(message.text)
     await bot.send_message(message.chat.id, film_link)
 
 
