@@ -19,8 +19,13 @@ class KinoPoisk(object):
     headers = {'X-API-KEY': API_TOKEN, 'Content-Type': 'application/json'}
     id_kino_poisk = ''
 
-    def get_id_kino_poisk(self, name: str) -> str:
-        return Movie.objects.search(name)[0].id
+    def get_id_kino_poisk(self, movie_name: str) -> list[str]:
+        movie_list = Movie.objects.search(movie_name)
+        list_movie = []
+        for movie in movie_list:
+            if movie.title == movie_name:
+                list_movie.append(movie.id)
+        return list_movie
 
     def set_id_kino_poisk(self, name: str):
         mov = Movie.objects.search(name)
