@@ -1,12 +1,11 @@
+import asyncio
 import os
 
-from telebot.async_telebot import AsyncTeleBot
 from telebot import types
-import asyncio
+from telebot.async_telebot import AsyncTeleBot
 
 from KinoPoisk import KinoPoisk
 from VX import VX
-from kinopoisk.movie import Movie
 
 bot = AsyncTeleBot(os.getenv('telegram_token'))
 
@@ -22,7 +21,7 @@ async def send_welcome(message: types.Message):
     first_name: str = message.from_user.first_name
     last_name: str = message.from_user.last_name
     message_for_user: str
-    if last_name == 'None':
+    if last_name is None or last_name == 'None'.casefold():
         message_for_user = f'<b>Привет.{first_name}</b>'
     else:
         message_for_user = f'<b>Привет.{first_name} {last_name}</b>'
@@ -56,7 +55,7 @@ async def send_top_film(message: types.Message):
                             reply_markup=markup_inline('Следующий', str(page_number + 1)))
 
 
-@bot.callback_query_handler(func=lambda message: True)
+@bot.callback_query_handler(func=lambda call: call.data.isdigit() == True)
 async def callback_query(call):
     kino = KinoPoisk()
     page_number = int(call.data)
