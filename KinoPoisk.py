@@ -23,7 +23,7 @@ class KinoPoisk(object):
         movie_list = Movie.objects.search(movie_name)
         list_movie = []
         for movie in movie_list:
-            if movie.title == movie_name:
+            if movie.title.casefold() == movie_name.casefold():
                 list_movie.append(movie.id)
         list_movie_info = self.get_info_about_film_by_id_in_kino_poisk(list_id_film=list_movie)
         return list_movie_info
@@ -73,18 +73,17 @@ class KinoPoisk(object):
         res = requests.get(url, headers=self.headers)
         json_string = res.text
         json_data = json.loads(json_string)
-
         jsonpath_name = parse('$.items[*].nameRu')
         jsonpath_film_id = parse('$.items[*].filmId')
         jsonpath_poster = parse('$.items[*].posterUrl')
-
         names = jsonpath_name.find(json_data)
         ids = jsonpath_film_id.find(json_data)
         posters = jsonpath_poster.find(json_data)
-
         list_films: list[Film] = []
         for name, id_string, poster in zip(names, ids, posters):
-            film_info = Film(film_name=name, film_id=id_string, film_poster=poster)
+            film_info = Film(film_name=name.value,
+                             film_id=id_string.value,
+                             film_poster=poster.value)
             list_films.append(film_info)
         return list_films
 

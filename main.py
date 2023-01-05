@@ -30,16 +30,18 @@ async def send_welcome(message: types.Message):
     await bot.send_message(message.chat.id, message_for_user, parse_mode='html')
 
 
-#  не работает пока что
-# @bot.message_handler(commands=['recommendation'])
-# async def send_recommendation(message: types.Message):
-#     message_for_user = 'Рекомендация основывается  на каком то фильме.' \
-#                        'Введите названия фильма который вам нравится и  бот отправит схожий фильм.'
-#     await bot.send_message(message.chat.id, message_for_user)
-#     film_name = message.text
-#     kino = KinoPoisk()
-#     for i in kino.give_recommendations(film_name):
-#         await bot.send_message(message.chat.id, i.send_message_in_tg())
+def extract_arg(arg):
+    return arg.split()[1:]
+
+
+@bot.message_handler(commands=['recommendation'])
+async def send_recommendation(message: types.Message):
+    for film_name in extract_arg(message.text):
+        message_for_user = 'Если вам понравился этот фильм Бот отправляет  похожие фильмы'.format(film_name)
+        await bot.send_message(message.chat.id, message_for_user)
+        list_similar_films = KinoPoisk().give_recommendations(str(film_name))
+        for film in list_similar_films:
+            await bot.send_message(message.chat.id, film.send_similar_films(), parse_mode='html')
 
 
 @bot.message_handler(commands=['top'])

@@ -49,4 +49,7 @@ class VX(object):
         json_data = json.loads(requests.get(self.URL, params=params).text)
         jsonpath_expression = parse('$.data[*].iframe_src')
         match = jsonpath_expression.find(json_data)
-        return str(match[0].value).replace("//", '')
+        if len(match)>0:
+            return str(match[0].value).replace("//", '')
+        else:
+            return 'Такого фильма на данный момент нет в базе'
