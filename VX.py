@@ -24,21 +24,25 @@ class VX(object):
             match = jsonpath_expression.find(json_data)
             if len(match) > 0:
                 url: str = str(match[0].value).replace("//", '')
-
-                list_links.append(f'О кинопроизведении {item.name}\n'
-                                       f'Ссылка на фильм: {url}\n'
-                                       f'Постер: {item.poster}\n'
-                                       f'Год производства: {item.year}\n'
-                                       f'Длительность: {item.length}\n'
-                                       f'Страна: {item.country}\n'
-                                       f'Жанр: {item.genre}\n'
-                                       f'Рейтинг по отзывам: {item.rating}'
-                                       .replace("',)", '')
-                                       .replace("('", '')
-                                       )
+                list_links.append(f'<b> {item.name}</b>\n'
+                                  f'<b>Ссылка для просмотра:</b> {url}\n'
+                                  f'Постер: {item.poster}\n'
+                                  f'Год производства: {item.year}\n'
+                                  f'Длительность: {item.length} мин\n'
+                                  f'Страна: {item.country}\n'
+                                  f'Жанр: {item.genre}\n'
+                                  f'Рейтинг по отзывам: {item.rating}'
+                                  .replace('\'', '')
+                                  .replace("(", '').replace(")", '')
+                                  .replace('{', '').replace('}', '')
+                                  .replace('[', '').replace(']', '')
+                                  .replace(',', '')
+                                  .replace('country:', '')
+                                  .replace('country :', '')
+                                  )
             else:
                 return list_links
-            return list_links
+        return list_links
 
     def get_film_by_kinopoisk_id(self, kinopoisk_id) -> str:
         params = dict(api_token=self.API_TOKEN, kinopoisk_id=kinopoisk_id)

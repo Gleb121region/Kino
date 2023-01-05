@@ -39,7 +39,7 @@ class KinoPoisk(object):
             jsonpath_name = parse('$.nameRu')
             jsonpath_year = parse('$.year')
             jsonpath_len = parse('$.filmLength')
-            jsonpath_country = parse('$.countries[*][*]')
+            jsonpath_country = parse('$.countries[*]')
             jsonpath_genre = parse('$.genres[*][*]')
             jsonpath_rating = parse('$.ratingKinopoisk')
             jsonpath_poster = parse('$.posterUrl')
@@ -52,8 +52,13 @@ class KinoPoisk(object):
             film_year = jsonpath_year.find(json_data)
             film_name = jsonpath_name.find(json_data)
 
+            list_film_genre = []
+
+            for genre in film_genre:
+                list_film_genre.append(genre.value['genre'])
+
             cinema = Cinema(film_id=int(id_film), name=film_name[0].value, year=film_year[0].value,
-                            length=film_len[0].value, country=film_country[0].value, genre=film_genre[0].value,
+                            length=film_len[0].value, country=film_country[0].value, genre=list_film_genre,
                             rating=film_rating[0].value, poster=film_poster[0].value)
             list_cinema.append(cinema)
         return list_cinema

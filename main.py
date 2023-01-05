@@ -48,7 +48,7 @@ async def send_top_film(message: types.Message):
     page_number = int(1)
     billboard = kino.give_top_films(page_number)
     for film_info in billboard.send_message_in_tg():
-        await bot.send_message(message.chat.id, film_info)
+        await bot.send_message(message.chat.id, film_info, parse_mode='html')
 
     await  bot.send_message(message.chat.id, 'Предлагаем вашему вниманию следующие двадцать кинопроизведений',
                             reply_markup=markup_inline('Следующий', str(page_number + 1)))
@@ -60,7 +60,7 @@ async def callback_query(call):
     page_number = int(call.data)
     billboard = kino.give_top_films(page_number)
     for film_info in billboard.send_message_in_tg():
-        await bot.send_message(call.message.chat.id, film_info)
+        await bot.send_message(call.message.chat.id, film_info, parse_mode='html')
 
     await  bot.send_message(call.message.chat.id, 'Предлагаем вашему вниманию следующие двадцать кинопроизведений',
                             reply_markup=markup_inline('Следующий', str(page_number + 1)))
@@ -70,7 +70,7 @@ async def callback_query(call):
 async def send_film_by_film_name(message):
     links = VX().get_film_link_by_name(message.text)
     for link in links:
-        await bot.send_message(message.chat.id, link)
+        await bot.send_message(message.chat.id, link, parse_mode='html')
 
 
 if __name__ == '__main__':

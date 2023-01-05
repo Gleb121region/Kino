@@ -32,8 +32,8 @@ class Billboard(object):
             for genre in cinemas.genre:
                 genre_str += genre.get('genre') + ' '
             from VX import VX
-            list_film_about.append(f'О кинопроизведении {cinemas.name}\n'
-                                   f'Ссылка на фильм: {VX().get_film_by_kinopoisk_id(cinemas.film_id)}\n'
+            list_film_about.append(f'<b>{cinemas.name}</b>\n'
+                                   f'<b>Ссылка для просмотра:</b> {VX().get_film_by_kinopoisk_id(cinemas.film_id)}\n'
                                    f'Постер: {cinemas.poster}\n'
                                    f'Год производства: {cinemas.year}\n'
                                    f'Длительность: {cinemas.length}\n'
