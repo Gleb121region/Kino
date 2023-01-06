@@ -1,16 +1,15 @@
+import json
 import os
 
 import requests
-import json
-
 from jsonpath_ng import parse
-from kinopoisk.movie import Movie
 
 from Data.Billboard import Billboard
 from Data.Billboard import Cinema
 from Data.Description import Description
 from Data.Film import Film
 from Data.Thriller import Thriller
+from SearcherKinoPoisk import Searcher
 
 
 class KinoPoisk(object):
@@ -20,11 +19,11 @@ class KinoPoisk(object):
     id_kino_poisk = ''
 
     def get_id_kino_poisk(self, movie_name: str) -> list[Cinema]:
-        movie_list = Movie.objects.search(movie_name)
+        movie_list = Searcher().parse(movie_name)
         list_movie = []
-        for movie in movie_list:
-            if movie.title.casefold() == movie_name.casefold():
-                list_movie.append(movie.id)
+        for movie_dict in movie_list:
+            if movie_dict['film_name'].casefold() == movie_name.casefold():
+                list_movie.append(movie_dict['film_id'])
         list_movie_info = self.get_info_about_film_by_id_in_kino_poisk(list_id_film=list_movie)
         return list_movie_info
 
@@ -63,9 +62,9 @@ class KinoPoisk(object):
             list_cinema.append(cinema)
         return list_cinema
 
-    def set_id_kino_poisk(self, name: str):
-        mov = Movie.objects.search(name)
-        self.id_kino_poisk = str(mov[0].id)
+    def set_id_kino_poisk(self, movie_name: str):
+        movie_dict_list = Searcher().parse(query=movie_name)
+        self.id_kino_poisk = str(movie_dict_list[0]['film_id'])
 
     def give_recommendations(self, name: str) -> list[Film]:
         self.set_id_kino_poisk(name)
@@ -82,7 +81,7 @@ class KinoPoisk(object):
         list_films: list[Film] = []
         for name, id_string, poster in zip(names, ids, posters):
             film_info = Film(film_name=name.value,
-                             film_id=id_string.value,
+                             film_id=int(id_string.value),
                              film_poster=poster.value)
             list_films.append(film_info)
         return list_films

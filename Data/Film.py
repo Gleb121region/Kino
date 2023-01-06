@@ -2,7 +2,7 @@ class Film(object):
 
     def __init__(self, film_name: str, film_id: int, film_poster: str):
         self.film_name = film_name,
-        self.film_id = film_id,
+        self.film_id: int = film_id,
         self.film_poster = film_poster
 
     def send_similar_films(self) -> str:
