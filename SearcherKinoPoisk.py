@@ -19,7 +19,8 @@ class Searcher(object):
         list_film_id = []
         for a in soup.select('a[data-id]'):
             if a.get('href').endswith('sr/1/') and a.text != '':
-                film_name = a.text.replace(' (сериал)'.casefold(), '').replace('(мини-сериал)'.casefold(), '').strip()
+                film_name = a.text.replace('\xa0', ' ').replace(' (сериал)'.casefold(), '').replace(
+                    '(мини-сериал)'.casefold(), '').strip()
 
                 my_dict = {'film_name': film_name, 'film_id': a.get('data-id')}
                 list_film_id.append(my_dict)
