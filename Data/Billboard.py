@@ -43,3 +43,18 @@ class Billboard(object):
             MyDictionary = {cinemas.film_id: text}
             list_film_about.append(MyDictionary)
         return list_film_about
+
+    def send_message_in_tg_minimalistic(self) -> str:
+        text_message = ''
+        for cinemas in self.list_film:
+            from VX import VX
+            film_id_str = str(cinemas.film_id).replace('(', '').replace(')', '').replace(',', '')
+            film_link = VX().get_film_link_by_kinopoisk_id(int(film_id_str))
+            text = f'<b>{cinemas.name}</b>\n' \
+                   f'Постер: {cinemas.poster}\n' \
+                   f'Ссылка для просмотра: {film_link}' \
+                .replace("(", '').replace(")", '') \
+                .replace(",", '').replace("'", '')
+            print(text)
+            text_message += text
+        return text_message

@@ -23,6 +23,16 @@ def markup_inline_button_add_to_favorites(film_id: str):
     return markup
 
 
+def markup_inline_button_go_to_web_page(film_id: str):
+    markup = InlineKeyboardMarkup()
+    film_id = film_id \
+        .replace(',', '') \
+        .replace('(', '').replace(')', '')
+    film_link = VX().get_film_link_by_kinopoisk_id(int(film_id))
+    markup.add(InlineKeyboardButton('Ссылка для просмотра', url=film_link))
+    return markup
+
+
 def markup_inline_button_next(page_number: str):
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton('Следующий', callback_data=page_number))
@@ -56,6 +66,14 @@ async def send_recommendation(message: types.Message):
             await bot.send_message(message.chat.id, film.send_similar_films(), parse_mode='html')
 
 
+@bot.message_handler(commands=['topv2'])
+async def send_top_film_minimalistic(message: types.Message):
+    kino = KinoPoisk()
+    page_number = int(1)
+    billboard = kino.give_top_films(page_number)
+    await  bot.send_message(message.chat.id, billboard.send_message_in_tg_minimalistic(), parse_mode='html')
+
+
 @bot.message_handler(commands=['top'])
 async def send_top_film(message: types.Message):
     kino = KinoPoisk()
@@ -63,11 +81,11 @@ async def send_top_film(message: types.Message):
     billboard = kino.give_top_films(page_number)
     for film_info in billboard.send_message_in_tg():
         for key, value in film_info.items():
-            await bot.send_message(message.chat.id, value, parse_mode='html',
+            await bot.send_message(message.chat.id, value, parse_mode='html', disable_notification=True,
                                    reply_markup=markup_inline_button_add_to_favorites(str(key)))
 
     await  bot.send_message(message.chat.id, 'Предлагаем вашему вниманию следующие двадцать кинопроизведений',
-                            reply_markup=markup_inline_button_next(str(page_number + 1)))
+                            disable_notification=True, reply_markup=markup_inline_button_next(str(page_number + 1)))
 
 # обработка кнопок вот так происходит
 # @bot.callback_query_handler(func=lambda call: str(call.data).startswith('788542'))
@@ -83,16 +101,19 @@ async def callback_query(call):
     for film_info in billboard.send_message_in_tg():
         for key, value in film_info.items():
             await bot.send_message(call.message.chat.id, value, parse_mode='html',
+                                   disable_notification=True,
                                    reply_markup=markup_inline_button_add_to_favorites(str(key)))
     await  bot.send_message(call.message.chat.id, 'Предлагаем вашему вниманию следующие двадцать кинопроизведений',
-                            reply_markup=markup_inline_button_next(str(page_number + 1)))
+                            disable_notification=True, reply_markup=markup_inline_button_next(str(page_number + 1)))
 
 
 @bot.message_handler(func=lambda message: True)
 async def send_film_by_film_name(message):
     links = VX().get_film_link_by_name(message.text)
     for link in links:
-        await bot.send_message(message.chat.id, link, parse_mode='html')
+        for key, value in link.items():
+            await bot.send_message(message.chat.id, value, parse_mode='html',
+                                   reply_markup=markup_inline_button_go_to_web_page(str(key)))
 
 
 if __name__ == '__main__':
