@@ -8,7 +8,7 @@ class Film(object):
     def send_similar_films(self) -> str:
         from VX import VX
         film = f'<b>{self.film_name}</b>\n' \
-               f'<b>Ссылка для просмотра:</b> {VX().get_film_by_kinopoisk_id(self.film_id)}\n' \
+               f'<b>Ссылка для просмотра:</b> {VX().get_film_link_by_kinopoisk_id(self.film_id)}\n' \
                f'Постер: {self.film_poster}\n' \
             .replace("\'", '') \
             .replace(')', '').replace('(', '') \

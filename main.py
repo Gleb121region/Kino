@@ -3,6 +3,7 @@ import os
 
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from KinoPoisk import KinoPoisk
 from VX import VX
@@ -10,9 +11,21 @@ from VX import VX
 bot = AsyncTeleBot(os.getenv('telegram_token'))
 
 
-def markup_inline(title: str, page_number: str):
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(title, callback_data=page_number))
+def markup_inline_button_add_to_favorites(film_id: str):
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 2
+    film_id = film_id \
+        .replace(',', '') \
+        .replace('(', '').replace(')', '')
+    film_link = VX().get_film_link_by_kinopoisk_id(int(film_id))
+    markup.add(InlineKeyboardButton('Добавить в избранное', callback_data=film_id),
+               InlineKeyboardButton('Ссылка для просмотра', url=film_link))
+    return markup
+
+
+def markup_inline_button_next(page_number: str):
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton('Следующий', callback_data=page_number))
     return markup
 
 
@@ -49,10 +62,17 @@ async def send_top_film(message: types.Message):
     page_number = int(1)
     billboard = kino.give_top_films(page_number)
     for film_info in billboard.send_message_in_tg():
-        await bot.send_message(message.chat.id, film_info, parse_mode='html')
+        for key, value in film_info.items():
+            await bot.send_message(message.chat.id, value, parse_mode='html',
+                                   reply_markup=markup_inline_button_add_to_favorites(str(key)))
 
     await  bot.send_message(message.chat.id, 'Предлагаем вашему вниманию следующие двадцать кинопроизведений',
-                            reply_markup=markup_inline('Следующий', str(page_number + 1)))
+                            reply_markup=markup_inline_button_next(str(page_number + 1)))
+
+# обработка кнопок вот так происходит
+# @bot.callback_query_handler(func=lambda call: str(call.data).startswith('788542'))
+# async def callback_query(call):
+#     await bot.send_message(call.message.chat.id, call.data)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.isdigit() == True)
@@ -61,10 +81,11 @@ async def callback_query(call):
     page_number = int(call.data)
     billboard = kino.give_top_films(page_number)
     for film_info in billboard.send_message_in_tg():
-        await bot.send_message(call.message.chat.id, film_info, parse_mode='html')
-
+        for key, value in film_info.items():
+            await bot.send_message(call.message.chat.id, value, parse_mode='html',
+                                   reply_markup=markup_inline_button_add_to_favorites(str(key)))
     await  bot.send_message(call.message.chat.id, 'Предлагаем вашему вниманию следующие двадцать кинопроизведений',
-                            reply_markup=markup_inline('Следующий', str(page_number + 1)))
+                            reply_markup=markup_inline_button_next(str(page_number + 1)))
 
 
 @bot.message_handler(func=lambda message: True)

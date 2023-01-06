@@ -44,7 +44,7 @@ class VX(object):
                 return list_links
         return list_links
 
-    def get_film_by_kinopoisk_id(self, kinopoisk_id) -> str:
+    def get_film_link_by_kinopoisk_id(self, kinopoisk_id: int) -> str:
         params = dict(api_token=self.API_TOKEN, kinopoisk_id=kinopoisk_id)
         json_data = json.loads(requests.get(self.URL, params=params).text)
         jsonpath_expression = parse('$.data[*].iframe_src')

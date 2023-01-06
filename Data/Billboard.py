@@ -22,8 +22,8 @@ class Billboard(object):
                  list_film: list[Cinema]):
         self.list_film = list_film
 
-    def send_message_in_tg(self) -> list[str]:
-        list_film_about: list[str] = []
+    def send_message_in_tg(self) -> list[dict]:
+        list_film_about: list[dict] = []
         for cinemas in self.list_film:
             county_str: str = ''
             for county in cinemas.country:
@@ -31,16 +31,15 @@ class Billboard(object):
             genre_str: str = ''
             for genre in cinemas.genre:
                 genre_str += genre.get('genre') + ' '
-            from VX import VX
-            list_film_about.append(f'<b>{cinemas.name}</b>\n'
-                                   f'<b>Ссылка для просмотра:</b> {VX().get_film_by_kinopoisk_id(cinemas.film_id)}\n'
-                                   f'Постер: {cinemas.poster}\n'
-                                   f'Год производства: {cinemas.year}\n'
-                                   f'Длительность: {cinemas.length}\n'
-                                   f'Страна: {county_str}\n'
-                                   f'Жанр: {genre_str}\n'
-                                   f'Рейтинг по отзывам: {cinemas.rating}'
-                                   .replace("',)", '')
-                                   .replace("('", '')
-                                   )
+            text = f'<b>{cinemas.name}</b>\n' \
+                   f'Постер: {cinemas.poster}\n' \
+                   f'Год производства: {cinemas.year}\n' \
+                   f'Длительность: {cinemas.length}\n' \
+                   f'Страна: {county_str}\n' \
+                   f'Жанр: {genre_str}\n' \
+                   f'Рейтинг по отзывам: {cinemas.rating}' \
+                .replace("(", '').replace(")", '') \
+                .replace(",", '').replace("'", '')
+            MyDictionary = {cinemas.film_id: text}
+            list_film_about.append(MyDictionary)
         return list_film_about
