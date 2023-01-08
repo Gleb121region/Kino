@@ -27,19 +27,33 @@ class Billboard(object):
         for cinemas in self.list_film:
             county_str: str = ''
             for county in cinemas.country:
-                county_str += county.get('country') + ' '
+                if county is dict:
+                    county_str += county.get('country') + ' '
+                if county is list:
+                    county_str += county
+
             genre_str: str = ''
             for genre in cinemas.genre:
                 genre_str += genre.get('genre') + ' '
-            text = f'<b>{cinemas.name}</b>\n' \
-                   f'Постер: {cinemas.poster}\n' \
-                   f'Год производства: {cinemas.year}\n' \
-                   f'Длительность: {cinemas.length}\n' \
-                   f'Страна: {county_str}\n' \
-                   f'Жанр: {genre_str}\n' \
-                   f'Рейтинг по отзывам: {cinemas.rating}' \
-                .replace("(", '').replace(")", '') \
-                .replace(",", '').replace("'", '')
+            length = str(cinemas.length)
+            if length.casefold() != 'None'.casefold():
+                text = f'<b>{cinemas.name}</b>\n' \
+                       f'Постер: {cinemas.poster}\n' \
+                       f'Год производства: {cinemas.year}\n' \
+                       f'Длительность: {length}\n' \
+                       f'Страна: {county_str}\n' \
+                       f'Жанр: {genre_str}\n' \
+                       f'Рейтинг по отзывам: {cinemas.rating}'.replace("(", '').replace(")", '').replace(",", '') \
+                    .replace("'", '')
+            else:
+                text = f'<b>{cinemas.name}</b>\n' \
+                       f'Постер: {cinemas.poster}\n' \
+                       f'Год производства: {cinemas.year}\n' \
+                       f'Страна: {county_str}\n' \
+                       f'Жанр: {genre_str}\n' \
+                       f'Рейтинг по отзывам: {cinemas.rating}' \
+                    .replace("(", '').replace(")", '') \
+                    .replace(",", '').replace("'", '')
             MyDictionary = {cinemas.film_id: text}
             list_film_about.append(MyDictionary)
         return list_film_about
