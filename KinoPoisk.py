@@ -87,9 +87,8 @@ class KinoPoisk(object):
         url = self.URL + str(id_kino_poisk)
         res = requests.get(url, headers=self.headers)
         json_string = res.text
-        print(json_string)
-
         json_data = json.loads(json_string)
+
         jsonpath_poster = parse('$.posterUrl')
         posters = jsonpath_poster.find(json_data)
         poster = posters[0].value
