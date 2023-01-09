@@ -16,6 +16,7 @@ class Billboard(object):
                 if county is list:
                     county_str += county
 
+
             genre_str: str = ''
             for genre in cinemas.genre:
                 genre_str += genre.get('genre') + ' '
