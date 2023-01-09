@@ -1,16 +1,23 @@
+from Data import Description
+
+
 class Film(object):
 
-    def __init__(self, film_name: str, film_id: int, film_poster: str):
-        self.film_name = film_name,
-        self.film_id: int = film_id,
-        self.film_poster = film_poster
+    def __init__(self, film_name: str, film_id: int, description: Description):
+        self.film_name: str = film_name
+        self.film_id: int = film_id
+        self.description = description
 
-    def send_similar_films(self) -> str:
-        from VX import VX
-        film = f'<b>{self.film_name}</b>\n' \
-               f'<b>Ссылка для просмотра:</b> {VX().get_film_link_by_kinopoisk_id(self.film_id)}\n' \
-               f'Постер: {self.film_poster}\n' \
-            .replace("\'", '') \
+    def send_info_about_film(self) -> dict:
+        text = f'<b>{self.film_name}</b>\n' \
+               f'Постер: {self.description.poster}\n' \
+               f'Год производства: {self.description.year}\n' \
+               f'Длительность: {self.description.duration}\n' \
+               f'Страна: {self.description.countries}\n' \
+               f'Жанр: {self.description.genres}\n' \
+               f'Рейтинг по отзывам: {self.description.rating}'.replace("\'", '') \
             .replace(')', '').replace('(', '') \
-            .replace(',', '')
-        return film
+            .replace(',', '').replace('[', '').replace(']', '')
+        film_id = self.film_id
+        my_dict = {film_id: text}
+        return my_dict

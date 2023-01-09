@@ -5,10 +5,9 @@ import requests
 from jsonpath_ng import parse
 
 from Data.Billboard import Billboard
-from Data.Billboard import Cinema
+from Data.Cinema import Cinema
 from Data.Description import Description
 from Data.Film import Film
-from Data.Thriller import Thriller
 from SearcherKinoPoisk import Searcher
 
 
@@ -74,23 +73,21 @@ class KinoPoisk(object):
         json_data = json.loads(json_string)
         jsonpath_name = parse('$.items[*].nameRu')
         jsonpath_film_id = parse('$.items[*].filmId')
-        jsonpath_poster = parse('$.items[*].posterUrl')
         names = jsonpath_name.find(json_data)
         ids = jsonpath_film_id.find(json_data)
-        posters = jsonpath_poster.find(json_data)
         list_films: list[Film] = []
-        for name, id_string, poster in zip(names, ids, posters):
+        for name, id_string in zip(names, ids):
             film_info = Film(film_name=name.value,
                              film_id=int(id_string.value),
-                             film_poster=poster.value)
+                             description=self.give_data_about_film(int(id_string.value)))
             list_films.append(film_info)
         return list_films
 
-    def give_data_about_film(self, name: str) -> Description:
-        self.set_id_kino_poisk(name)
-        url = self.URL + self.id_kino_poisk
+    def give_data_about_film(self, id_kino_poisk: int) -> Description:
+        url = self.URL + str(id_kino_poisk)
         res = requests.get(url, headers=self.headers)
         json_string = res.text
+        print(json_string)
 
         json_data = json.loads(json_string)
         jsonpath_poster = parse('$.posterUrl')
@@ -121,6 +118,10 @@ class KinoPoisk(object):
         genres = jsonpath_genres.find(json_data)
         list_genres = list(map(lambda x: x.value, genres))
 
+        jsonpath_filmLength = parse('$..filmLength')
+        duration = jsonpath_filmLength.find(json_data)
+        data_duration = duration[0].value
+
         jsonpath_start_year = parse('$.startYear')
         start_years = jsonpath_start_year.find(json_data)
         start_year = start_years[0].value
@@ -137,25 +138,8 @@ class KinoPoisk(object):
                            countries=list_counties,
                            genres=list_genres,
                            start_year=start_year,
-                           end_year=end_year)
-        return data
-
-    def give_thriller(self, name: str) -> Thriller:
-        self.set_id_kino_poisk(name)
-        url = self.URL + self.id_kino_poisk + '/videos'
-        res = requests.get(url, headers=self.headers)
-        json_string = res.text
-
-        json_data = json.loads(json_string)
-        jsonpath_url = parse('$.items[*].url')
-        jsonpath_name = parse('$.items[*].name')
-        urls = jsonpath_url.find(json_data)
-        names = jsonpath_name.find(json_data)
-
-        list_url = list(map(lambda x: x.value, urls))
-        list_name = list(map(lambda x: x.value, names))
-
-        data = Thriller(names=list_name, urls=list_url)
+                           end_year=end_year,
+                           duration=data_duration)
         return data
 
     def give_top_films(self, page_num: int) -> Billboard:
@@ -214,7 +198,6 @@ class KinoPoisk(object):
         url = f'https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword?keyword={keyword}&page={page_number}'
         res = requests.get(url=url, headers=self.headers)
         json_string = res.text
-        print(json_string)
         json_data = json.loads(json_string)
         jsonpath_film_id = parse('$.films[*].filmId')
         film_id = jsonpath_film_id.find(json_data)
@@ -258,3 +241,21 @@ class KinoPoisk(object):
             list_movie.append(cinema)
         obj = Billboard(list_movie)
         return obj
+
+    def send_spin_offs(self, movie_name: str) -> list[Film]:
+        self.set_id_kino_poisk(movie_name)
+        url = f'https://kinopoiskapiunofficial.tech/api/v2.1/films/{int(self.id_kino_poisk)}/sequels_and_prequels'
+        res = requests.get(url=url, headers=self.headers)
+        json_string = res.text
+        json_data = json.loads(json_string)
+        jsonpath_film_id = parse('$..[filmId]')
+        film_id = jsonpath_film_id.find(json_data)
+        jsonpath_name = parse('$..[nameRu]')
+        film_name = jsonpath_name.find(json_data)
+        list_film_id = list(map(lambda x: x.value, film_id))
+        list_film_name = list(map(lambda x: x.value, film_name))
+        list_film: list[Film] = []
+        for film_id, name in zip(list_film_id, list_film_name):
+            film: Film = Film(film_name=name, film_id=film_id, description=self.give_data_about_film(film_id))
+            list_film.append(film)
+        return list_film

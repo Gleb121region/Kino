@@ -49,7 +49,9 @@ async def send_recommendation(message: types.Message):
         await bot.send_message(message.chat.id, message_for_user)
         list_similar_films = KinoPoisk().give_recommendations(str(film_name))
         for film in list_similar_films:
-            await bot.send_message(message.chat.id, film.send_similar_films(), parse_mode='html')
+            for k, v in film.send_info_about_film().items():
+                await bot.send_message(message.chat.id, v, parse_mode='html', disable_notification=True,
+                                       reply_markup=webpage_and_favorites_list_add_handler(str(k)))
 @bot.message_handler(commands=['top'])
 async def send_top_film(message: types.Message):
     page_number = 1
@@ -69,9 +71,19 @@ async def send_film_by_keyword(message: types.Message):
     for keyword in extract_arg(message.text):
         billboard = KinoPoisk().give_films_by_keyword(keyword=str(keyword), page_number=page_number)
         for film_info in billboard.send_message_in_tg():
-            for  key,value in film_info.items():
-                await bot.send_message(message.chat.id,value,parse_mode='html', disable_notification=True,
+            for key, value in film_info.items():
+                await bot.send_message(message.chat.id, value, parse_mode='html', disable_notification=True,
                                        reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+
+
+@bot.message_handler(commands=['spin-off'])
+async def send_background(message: types.Message):
+    for film_name in extract_arg(message.text):
+        for film in KinoPoisk().send_spin_offs(film_name):
+            for key, value in film.send_info_about_film().items():
+                await bot.send_message(message.chat.id, value, parse_mode='html', disable_notification=True,
+                                       reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+
 
 @bot.callback_query_handler(func=lambda call: call.data.isdigit() == True)
 async def callback_query(call):
