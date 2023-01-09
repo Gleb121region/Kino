@@ -158,8 +158,8 @@ class KinoPoisk(object):
         data = Thriller(names=list_name, urls=list_url)
         return data
 
-    def give_top_films(self, pageNum: int) -> Billboard:
-        url = self.URL + f'top?page={pageNum}'
+    def give_top_films(self, page_num: int) -> Billboard:
+        url = self.URL + f'top?page={page_num}'
         res = requests.get(url, headers=self.headers)
         json_string = res.text
         json_data = json.loads(json_string)
@@ -208,61 +208,53 @@ class KinoPoisk(object):
         obj = Billboard(list_movie)
         return obj
 
-    def give_search_result_with_filter(self,
-                                       order_by: str = 'RATING',
-                                       film_type: str = 'ALL',
-                                       rating_min: int = 0, rating_max: int = 10,
-                                       year_min: int = 1900, year_max: int = 2100,
-                                       page: int = 1) -> Billboard:
-        params = dict(order=order_by,
-                      type=film_type,
-                      ratingFrom=rating_min, ratingTo=rating_max,
-                      yearFrom=year_min, yearTo=year_max,
-                      page=page)
-        res = requests.get(url=self.URL, params=params, headers=self.headers)
-        json_data = json.loads(res.text)
+    def give_films_by_keyword(self, keyword: str, page_number: int):
+        if keyword == '':
+            raise ValueError('Empty keyword')
+        url = f'https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword?keyword={keyword}&page={page_number}'
+        res = requests.get(url=url, headers=self.headers)
+        json_string = res.text
+        print(json_string)
+        json_data = json.loads(json_string)
+        jsonpath_film_id = parse('$.films[*].filmId')
+        film_id = jsonpath_film_id.find(json_data)
+        jsonpath_name = parse('$.films[*].nameRu')
+        film_name = jsonpath_name.find(json_data)
+        jsonpath_year = parse('$.films[*].year')
+        film_year = jsonpath_year.find(json_data)
+        jsonpath_film_len = parse('$.films[*].filmLength')
+        film_len = jsonpath_film_len.find(json_data)
+        jsonpath_country = parse('$.films[*].countries[*]')
+        film_country = jsonpath_country.find(json_data)
+        jsonpath_genre = parse('$.films[*].genres')
+        film_genre = jsonpath_genre.find(json_data)
+        jsonpath_rating = parse('$.films[*].rating')
+        film_rating = jsonpath_rating.find(json_data)
+        jsonpath_poster = parse('$.films[*].posterUrl')
+        film_poster = jsonpath_poster.find(json_data)
+        list_film_id = list(map(lambda x: x.value, film_id))
+        list_film_name = list(map(lambda x: x.value, film_name))
+        list_film_year = list(map(lambda x: x.value, film_year))
+        list_film_len = list(map(lambda x: x.value, film_len))
+        list_film_country = list(map(lambda x: x.value, film_country))
+        list_film_genre = list(map(lambda x: x.value, film_genre))
+        list_film_rating = list(map(lambda x: x.value, film_rating))
+        list_film_poster = list(map(lambda x: x.value, film_poster))
 
-        jsonpath_id = parse('$..[kinopoiskId]')
-        jsonpath_name = parse('$..[nameRu]')
-        jsonpath_rating = parse('$..[ratingKinopoisk]')
-        jsonpath_countries = parse('$..[countries]')
-        jsonpath_genres = parse('$..[genres]')
-        jsonpath_year = parse('$..[year]')
-        jsonpath_poster = parse('$..[posterUrl]')
-
-        id = jsonpath_id.find(json_data)
-        names = jsonpath_name.find(json_data)
-        ratings = jsonpath_rating.find(json_data)
-        countries = jsonpath_countries.find(json_data)
-        genres = jsonpath_genres.find(json_data)
-        years = jsonpath_year.find(json_data)
-        posters = jsonpath_poster.find(json_data)
-
-        list_id = list(map(lambda x: x.value, id))
-        list_name = list(map(lambda x: x.value, names))
-        list_rating = list(map(lambda x: x.value, ratings))
-        list_country = list(map(lambda x: x.value, countries))
-        list_genres = list(map(lambda x: x.value, genres))
-        list_year = list(map(lambda x: x.value, years))
-        list_poster = list(map(lambda x: x.value, posters))
-
-        list_movie = []
-        for film_id, name, rating, countries, genres, year, poster in zip(list_id, list_name, list_rating, list_country,
-                                                                          list_genres, list_year, list_poster):
-            if ('для взрослых'.casefold()) in (str(genres)):
-                pass
-            else:
-                if name is None:
-                    pass
-                else:
-                    cinema: Cinema = Cinema(film_id=film_id,
-                                            name=name,
-                                            year=year,
-                                            length=None,
-                                            country=countries,
-                                            genre=genres,
-                                            rating=rating,
-                                            poster=poster)
-                    list_movie.append(cinema)
+        list_movie: list[Cinema] = []
+        for film_id, name, year, length, country, genre, rating, poster in zip(list_film_id, list_film_name,
+                                                                               list_film_year,
+                                                                               list_film_len, list_film_country,
+                                                                               list_film_genre, list_film_rating,
+                                                                               list_film_poster):
+            cinema: Cinema = Cinema(film_id=film_id,
+                                    name=name,
+                                    year=year,
+                                    length=length,
+                                    country=country,
+                                    genre=genre,
+                                    rating=rating,
+                                    poster=poster)
+            list_movie.append(cinema)
         obj = Billboard(list_movie)
         return obj
