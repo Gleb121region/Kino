@@ -42,6 +42,8 @@ async def send_welcome(message: types.Message):
     await bot.send_message(message.chat.id, message_for_user, parse_mode='html')
 def extract_arg(arg):
     return arg.split()[1:]
+
+
 @bot.message_handler(commands=['recommendation'])
 async def send_recommendation(message: types.Message):
     for film_name in extract_arg(message.text):
@@ -52,6 +54,8 @@ async def send_recommendation(message: types.Message):
             for k, v in film.send_info_about_film().items():
                 await bot.send_message(message.chat.id, v, parse_mode='html', disable_notification=True,
                                        reply_markup=webpage_and_favorites_list_add_handler(str(k)))
+
+
 @bot.message_handler(commands=['top'])
 async def send_top_film(message: types.Message):
     page_number = 1
@@ -96,6 +100,8 @@ async def callback_query(call):
                                    reply_markup=webpage_and_favorites_list_add_handler(str(key)))
     await  bot.send_message(call.message.chat.id, 'Предлагаем вашему вниманию следующие  кинопроизведения',
                             disable_notification=True, reply_markup=next_button_handler(str(page_number + 1)))
+
+
 @bot.message_handler(func=lambda message: True)
 async def send_film_by_film_name(message):
     links = VX().get_film_link_by_name(message.text)
@@ -103,6 +109,7 @@ async def send_film_by_film_name(message):
         for key, value in link.items():
             await bot.send_message(message.chat.id, value, parse_mode='html',
                                    reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+
 
 if __name__ == '__main__':
     asyncio.run(bot.polling(none_stop=True))

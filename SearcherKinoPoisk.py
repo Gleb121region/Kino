@@ -3,11 +3,14 @@ from bs4 import BeautifulSoup
 
 
 class Searcher(object):
+    proxy = 'http://proxy.server:3128'
     URL = 'https://www.kinopoisk.ru/index.php'
 
     def give_html(self, query: str):
         params = {'kp_query': query}
-        response = requests.get(url=self.URL, params=params)
+        response = requests.get(url=self.URL,
+                                params=params,
+                                proxies=self.proxy)
         if response:
             content = response.content.decode('utf-8')
             if 'captcha' in content:

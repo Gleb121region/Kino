@@ -13,9 +13,22 @@ from SearcherKinoPoisk import Searcher
 
 class KinoPoisk(object):
     URL = 'https://kinopoiskapiunofficial.tech/api/v2.2/films/'
-    API_TOKEN = os.getenv('kino_poisk_token')
-    headers = {'X-API-KEY': API_TOKEN, 'Content-Type': 'application/json'}
+    KEYS_KINOPOISK_API_UNOFFICIAL = os.getenv('KEYS_KINOPOISK_API_UNOFFICIAL').split()
     id_kino_poisk = ''
+
+    def get_json_by_url(self, url: str) -> dict | None:
+        if not self.KEYS_KINOPOISK_API_UNOFFICIAL:
+            return None
+        for key in self.KEYS_KINOPOISK_API_UNOFFICIAL:
+            try:
+                res = requests.get(url=url, headers={'X-API-KEY': key, 'Content-Type': 'application/json'})
+                if res.ok:
+                    json_data = json.loads(res.text)
+                    return json_data
+                else:
+                    pass
+            except (ConnectionError, json.JSONDecodeError) as error:
+                pass
 
     def get_id_kino_poisk(self, movie_name: str) -> list[Cinema]:
         movie_list = Searcher().parse(movie_name)
@@ -30,9 +43,7 @@ class KinoPoisk(object):
         list_cinema: list[Cinema] = []
         for id_film in list_id_film:
             url = self.URL + str(id_film)
-            res = requests.get(url=url, headers=self.headers)
-            json_string = res.text
-            json_data = json.loads(json_string)
+            json_data = self.get_json_by_url(url=url)
 
             jsonpath_name = parse('$.nameRu')
             jsonpath_year = parse('$.year')
@@ -68,9 +79,7 @@ class KinoPoisk(object):
     def give_recommendations(self, name: str) -> list[Film]:
         self.set_id_kino_poisk(name)
         url: str = self.URL + self.id_kino_poisk + '/similars'
-        res = requests.get(url, headers=self.headers)
-        json_string = res.text
-        json_data = json.loads(json_string)
+        json_data = self.get_json_by_url(url=url)
         jsonpath_name = parse('$.items[*].nameRu')
         jsonpath_film_id = parse('$.items[*].filmId')
         names = jsonpath_name.find(json_data)
@@ -85,9 +94,7 @@ class KinoPoisk(object):
 
     def give_data_about_film(self, id_kino_poisk: int) -> Description:
         url = self.URL + str(id_kino_poisk)
-        res = requests.get(url, headers=self.headers)
-        json_string = res.text
-        json_data = json.loads(json_string)
+        json_data = self.get_json_by_url(url=url)
 
         jsonpath_poster = parse('$.posterUrl')
         posters = jsonpath_poster.find(json_data)
@@ -143,9 +150,7 @@ class KinoPoisk(object):
 
     def give_top_films(self, page_num: int) -> Billboard:
         url = self.URL + f'top?page={page_num}'
-        res = requests.get(url, headers=self.headers)
-        json_string = res.text
-        json_data = json.loads(json_string)
+        json_data = self.get_json_by_url(url)
 
         jsonpath_film_id = parse('$.films[*].filmId')
         film_id = jsonpath_film_id.find(json_data)
@@ -195,9 +200,7 @@ class KinoPoisk(object):
         if keyword == '':
             raise ValueError('Empty keyword')
         url = f'https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword?keyword={keyword}&page={page_number}'
-        res = requests.get(url=url, headers=self.headers)
-        json_string = res.text
-        json_data = json.loads(json_string)
+        json_data = self.get_json_by_url(url=url)
         jsonpath_film_id = parse('$.films[*].filmId')
         film_id = jsonpath_film_id.find(json_data)
         jsonpath_name = parse('$.films[*].nameRu')
@@ -244,9 +247,7 @@ class KinoPoisk(object):
     def send_spin_offs(self, movie_name: str) -> list[Film]:
         self.set_id_kino_poisk(movie_name)
         url = f'https://kinopoiskapiunofficial.tech/api/v2.1/films/{int(self.id_kino_poisk)}/sequels_and_prequels'
-        res = requests.get(url=url, headers=self.headers)
-        json_string = res.text
-        json_data = json.loads(json_string)
+        json_data = self.get_json_by_url(url=url)
         jsonpath_film_id = parse('$..[filmId]')
         film_id = jsonpath_film_id.find(json_data)
         jsonpath_name = parse('$..[nameRu]')
