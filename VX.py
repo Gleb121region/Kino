@@ -25,7 +25,6 @@ class VX(object):
             jsonpath_expression = parse('$.data[*].iframe_src')
             match = jsonpath_expression.find(json_data)
             if len(match) > 0:
-                url: str = str(match[0].value).replace("//", '')
                 text = f'<b> {item.name}</b>\n' \
                        f'Постер: {item.poster}\n' \
                        f'Год производства: {item.year}\n' \
@@ -44,7 +43,7 @@ class VX(object):
 
     def get_film_link_by_kinopoisk_id(self, kinopoisk_id: int) -> str | None:
         params = dict(api_token=self.API_TOKEN, kinopoisk_id=kinopoisk_id)
-        json_data = self.get_json_by_url(params)
+        json_data = json.loads(self.get_json_by_url(params))
         jsonpath_expression = parse('$.data[*].iframe_src')
         match = jsonpath_expression.find(json_data)
         if len(match) > 0:

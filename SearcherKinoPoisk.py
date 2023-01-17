@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 
 
 class Searcher(object):
-    proxy = 'http://proxy.server:3128'
     URL = 'https://www.kinopoisk.ru/index.php'
 
     def give_html(self, query: str):
