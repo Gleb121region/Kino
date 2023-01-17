@@ -9,8 +9,7 @@ class Searcher(object):
     def give_html(self, query: str):
         params = {'kp_query': query}
         response = requests.get(url=self.URL,
-                                params=params,
-                                proxies=self.proxy)
+                                params=params)
         if response:
             content = response.content.decode('utf-8')
             if 'captcha' in content:
