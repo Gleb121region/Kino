@@ -1,5 +1,6 @@
 import asyncio
 import os
+import traceback
 
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
@@ -39,7 +40,11 @@ async def send_welcome(message: types.Message):
     else:
         message_for_user = f'<b>Привет.{first_name} {last_name}</b>'
 
-    await bot.send_message(message.chat.id, message_for_user, parse_mode='html')
+    await bot.send_message(message.chat.id,
+                           message_for_user,
+                           parse_mode='html')
+
+
 def extract_arg(arg):
     return arg.split()[1:]
 
@@ -51,9 +56,12 @@ async def send_recommendation(message: types.Message):
         await bot.send_message(message.chat.id, message_for_user)
         list_similar_films = KinoPoisk().give_recommendations(str(film_name))
         for film in list_similar_films:
-            for k, v in film.send_info_about_film().items():
-                await bot.send_message(message.chat.id, v, parse_mode='html', disable_notification=True,
-                                       reply_markup=webpage_and_favorites_list_add_handler(str(k)))
+            for key, value in film.send_info_about_film().items():
+                await bot.send_message(message.chat.id,
+                                       value,
+                                       parse_mode='html',
+                                       disable_notification=True,
+                                       reply_markup=webpage_and_favorites_list_add_handler(str(key)))
 
 
 @bot.message_handler(commands=['top'])
@@ -62,11 +70,16 @@ async def send_top_film(message: types.Message):
     billboard = KinoPoisk().give_top_films(page_number)
     for film_info in billboard.send_message_in_tg():
         for key, value in film_info.items():
-            await bot.send_message(message.chat.id, value, parse_mode='html', disable_notification=True,
+            await bot.send_message(message.chat.id,
+                                   value,
+                                   parse_mode='html',
+                                   disable_notification=True,
                                    reply_markup=webpage_and_favorites_list_add_handler(str(key)))
 
-    await  bot.send_message(message.chat.id, 'Предлагаем вашему вниманию следующие  кинопроизведения',
-                            disable_notification=True, reply_markup=next_button_handler(str(page_number + 1)))
+    await  bot.send_message(message.chat.id,
+                            'Предлагаем вашему вниманию следующие  кинопроизведения',
+                            disable_notification=True,
+                            reply_markup=next_button_handler(str(page_number + 1)))
 
 
 @bot.message_handler(commands=['search'])
@@ -76,16 +89,22 @@ async def send_film_by_keyword(message: types.Message):
         billboard = KinoPoisk().give_films_by_keyword(keyword=str(keyword), page_number=page_number)
         for film_info in billboard.send_message_in_tg():
             for key, value in film_info.items():
-                await bot.send_message(message.chat.id, value, parse_mode='html', disable_notification=True,
+                await bot.send_message(message.chat.id,
+                                       value,
+                                       parse_mode='html',
+                                       disable_notification=True,
                                        reply_markup=webpage_and_favorites_list_add_handler(str(key)))
 
 
-@bot.message_handler(commands=['spin-off'])
+@bot.message_handler(commands=['story'])
 async def send_background(message: types.Message):
     for film_name in extract_arg(message.text):
         for film in KinoPoisk().send_spin_offs(film_name):
             for key, value in film.send_info_about_film().items():
-                await bot.send_message(message.chat.id, value, parse_mode='html', disable_notification=True,
+                await bot.send_message(message.chat.id,
+                                       value,
+                                       parse_mode='html',
+                                       disable_notification=True,
                                        reply_markup=webpage_and_favorites_list_add_handler(str(key)))
 
 
@@ -96,19 +115,27 @@ async def callback_query(call):
     billboard = kino.give_top_films(page_number)
     for film_info in billboard.send_message_in_tg():
         for key, value in film_info.items():
-            await bot.send_message(call.message.chat.id, value, parse_mode='html', disable_notification=True,
+            await bot.send_message(call.message.chat.id,
+                                   value,
+                                   parse_mode='html',
+                                   disable_notification=True,
                                    reply_markup=webpage_and_favorites_list_add_handler(str(key)))
-    await  bot.send_message(call.message.chat.id, 'Предлагаем вашему вниманию следующие  кинопроизведения',
-                            disable_notification=True, reply_markup=next_button_handler(str(page_number + 1)))
+    await  bot.send_message(call.message.chat.id,
+                            'Предлагаем вашему вниманию следующие  кинопроизведения',
+                            disable_notification=True,
+                            reply_markup=next_button_handler(str(page_number + 1)))
 
 
 @bot.message_handler(func=lambda message: True)
 async def send_film_by_film_name(message):
-    links = VX().get_film_link_by_name(message.text)
-    for link in links:
-        for key, value in link.items():
-            await bot.send_message(message.chat.id, value, parse_mode='html',
-                                   reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+    try:
+        links = VX().get_film_link_by_name(message.text)
+        for link in links:
+            for key, value in link.items():
+                await bot.send_message(message.chat.id, value, parse_mode='html',
+                                       reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+    except Exception as e:
+        print('Ошибка:\n', traceback.format_exc())
 
 
 if __name__ == '__main__':
