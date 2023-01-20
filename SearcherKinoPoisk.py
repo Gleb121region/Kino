@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 
+from SearcherWeb import SearcherWeb
+
 
 class Searcher(object):
     URL: str = 'https://www.kinopoisk.ru/index.php'

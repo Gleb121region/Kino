@@ -12,14 +12,14 @@ from SearcherKinoPoisk import Searcher
 
 
 class KinoPoisk(object):
-    URL = 'https://kinopoiskapiunofficial.tech/api/v2.2/films/'
-    KEYS_KINOPOISK_API_UNOFFICIAL = os.getenv('KEYS_KINOPOISK_API_UNOFFICIAL').split()
-    id_kino_poisk = ''
+    __URL = 'https://kinopoiskapiunofficial.tech/api/v2.2/films/'
+    __KEYS_KINOPOISK_API_UNOFFICIAL = os.getenv('KEYS_KINOPOISK_API_UNOFFICIAL').split()
+    __id_kino_poisk = ''
 
     def get_json_by_url(self, url: str) -> dict | None:
-        if not self.KEYS_KINOPOISK_API_UNOFFICIAL:
+        if not self.__KEYS_KINOPOISK_API_UNOFFICIAL:
             return None
-        for key in self.KEYS_KINOPOISK_API_UNOFFICIAL:
+        for key in self.__KEYS_KINOPOISK_API_UNOFFICIAL:
             try:
                 res = requests.get(url=url, headers={'X-API-KEY': key, 'Content-Type': 'application/json'})
                 if res.ok:
@@ -46,7 +46,7 @@ class KinoPoisk(object):
         tmp_id_film = -1
         for id_film in (film_id for film_id in list_id_film if film_id is not None):
             if id_film != tmp_id_film:
-                url = self.URL + str(id_film)
+                url = self.__URL + str(id_film)
                 json_data = self.get_json_by_url(url=url)
 
                 jsonpath_name = parse('$.nameRu')
@@ -64,32 +64,33 @@ class KinoPoisk(object):
                 film_len = jsonpath_len.find(json_data)
                 film_year = jsonpath_year.find(json_data)
                 film_name = jsonpath_name.find(json_data)
-                print(film_name)
+                print(type(film_name))
 
                 list_film_genre = []
 
                 for genre in film_genre:
                     list_film_genre.append(genre.value['genre'])
                 print(id_film)
-                cinema = Cinema(film_id=int(id_film),
-                                name=film_name[0].value,
-                                year=film_year[0].value,
-                                length=film_len[0].value,
-                                country=film_country[0].value,
-                                genre=list_film_genre,
-                                rating=film_rating[0].value,
-                                poster=film_poster[0].value)
-                list_cinema.append(cinema)
-                tmp_id_film = id_film
+                if film_name:
+                    cinema = Cinema(film_id=int(id_film),
+                                    name=film_name[0].value,
+                                    year=film_year[0].value,
+                                    length=film_len[0].value,
+                                    country=film_country[0].value,
+                                    genre=list_film_genre,
+                                    rating=film_rating[0].value,
+                                    poster=film_poster[0].value)
+                    list_cinema.append(cinema)
+                    tmp_id_film = id_film
         return list_cinema
 
     def set_id_kino_poisk(self, movie_name: str):
         movie_dict_list = Searcher().parse(query=movie_name)
-        self.id_kino_poisk = str(movie_dict_list[0]['film_id'])
+        self.__id_kino_poisk = str(movie_dict_list[0]['film_id'])
 
     def give_recommendations(self, name: str) -> list[Film]:
         self.set_id_kino_poisk(name)
-        url: str = self.URL + self.id_kino_poisk + '/similars'
+        url: str = self.__URL + self.__id_kino_poisk + '/similars'
         json_data = self.get_json_by_url(url=url)
         jsonpath_name = parse('$.items[*].nameRu')
         jsonpath_film_id = parse('$.items[*].filmId')
@@ -104,7 +105,7 @@ class KinoPoisk(object):
         return list_films
 
     def give_data_about_film(self, id_kino_poisk: int) -> Description:
-        url = self.URL + str(id_kino_poisk)
+        url = self.__URL + str(id_kino_poisk)
         json_data = self.get_json_by_url(url=url)
 
         jsonpath_poster = parse('$.posterUrl')
@@ -160,7 +161,7 @@ class KinoPoisk(object):
         return data
 
     def give_top_films(self, page_num: int) -> Billboard:
-        url = self.URL + f'top?page={page_num}'
+        url = self.__URL + f'top?page={page_num}'
         json_data = self.get_json_by_url(url)
 
         jsonpath_film_id = parse('$.films[*].filmId')
@@ -257,7 +258,7 @@ class KinoPoisk(object):
 
     def send_spin_offs(self, movie_name: str) -> list[Film]:
         self.set_id_kino_poisk(movie_name)
-        url = f'https://kinopoiskapiunofficial.tech/api/v2.1/films/{int(self.id_kino_poisk)}/sequels_and_prequels'
+        url = f'https://kinopoiskapiunofficial.tech/api/v2.1/films/{int(self.__id_kino_poisk)}/sequels_and_prequels'
         json_data = self.get_json_by_url(url=url)
         jsonpath_film_id = parse('$..[filmId]')
         film_id = jsonpath_film_id.find(json_data)
