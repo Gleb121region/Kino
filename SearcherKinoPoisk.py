@@ -5,12 +5,12 @@ from SearcherWeb import SearcherWeb
 
 
 class Searcher(object):
-    URL: str = 'https://www.kinopoisk.ru/index.php'
+    __URL: str = 'https://www.kinopoisk.ru/index.php'
 
     def give_html(self, query: str) -> str:
         params = {'kp_query': query}
         session = requests.session()
-        response = session.get(url=self.URL, params=params)
+        response = session.get(url=self.__URL, params=params)
         if response:
             content = response.content.decode('utf-8')
             if 'captcha' in content:
