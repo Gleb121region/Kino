@@ -1,24 +1,35 @@
 import requests
 from bs4 import BeautifulSoup
-
-from SearcherWeb import SearcherWeb
+from kinopoisk.movie import Movie
 
 
 class Searcher(object):
     __URL: str = 'https://www.kinopoisk.ru/index.php'
 
-    def give_html(self, query: str) -> str:
+    def give_html(self, query: str) -> str | None:
         params = {'kp_query': query}
         session = requests.session()
         response = session.get(url=self.__URL, params=params)
         if response:
             content = response.content.decode('utf-8')
             if 'captcha' in content:
-                raise ValueError('Kino poisk block this IP. Too many requests')
+                # raise ValueError('Kino poisk block this IP. Too many requests')
+                return None
             return content
 
     def parse(self, query: str) -> list[dict[str, str]]:
-        soup = BeautifulSoup(self.give_html(query))
+        html = self.give_html(query)
+        if html is None:
+            list_film_id = []
+            for i in range(5):
+                movie = Movie.objects.search(query)[i]
+                movie_id = movie.id
+                movie_name = movie.name
+                if movie_name.casefold() == query.casefold():
+                    my_dict = {'film_name': movie_name, 'film_id': movie_id}
+                    list_film_id.append(my_dict)
+            return list_film_id
+        soup = BeautifulSoup(html)
         list_film_id = []
         tmp_href = ''
         for a in (a_data_id for a_data_id in soup.select('a[data-id]') if
@@ -28,7 +39,8 @@ class Searcher(object):
                 if href != tmp_href:
                     film_name = a.text.replace('\xa0', ' ').replace(' (сериал)'.casefold(), '').replace(
                         '(мини-сериал)'.casefold(), '').strip()
-                    my_dict = {'film_name': film_name, 'film_id': a.get('data-id')}
-                    list_film_id.append(my_dict)
-                    tmp_href = href
+                    if film_name.casefold() == query.casefold():
+                        my_dict = {'film_name': film_name, 'film_id': a.get('data-id')}
+                        list_film_id.append(my_dict)
+                        tmp_href = href
         return list_film_id

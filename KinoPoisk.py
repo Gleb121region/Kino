@@ -34,9 +34,6 @@ class KinoPoisk(object):
         movie_list = Searcher().parse(movie_name)
         list_movie = []
         for movie_dict in movie_list:
-            if movie_dict['film_name'].casefold() == movie_name.casefold():
-                list_movie.append(movie_dict['film_id'])
-            else:
                 list_movie.append(movie_dict['film_id'])
         list_movie_info = self.get_info_about_film_by_id_in_kino_poisk(list_id_film=list_movie)
         return list_movie_info
@@ -64,13 +61,11 @@ class KinoPoisk(object):
                 film_len = jsonpath_len.find(json_data)
                 film_year = jsonpath_year.find(json_data)
                 film_name = jsonpath_name.find(json_data)
-                print(type(film_name))
 
                 list_film_genre = []
 
                 for genre in film_genre:
                     list_film_genre.append(genre.value['genre'])
-                print(id_film)
                 if film_name:
                     cinema = Cinema(film_id=int(id_film),
                                     name=film_name[0].value,

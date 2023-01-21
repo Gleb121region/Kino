@@ -1,7 +1,11 @@
 import asyncio
+import json
 import os
 import traceback
 
+import requests
+from jsonpath_ng import parse
+from spellchecker import SpellChecker
 from telebot import asyncio_filters
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
@@ -13,6 +17,8 @@ from KinoPoisk import KinoPoisk
 from VX import VX
 
 bot = AsyncTeleBot(os.getenv('telegram_token'), state_storage=StateMemoryStorage())
+google_api_key = os.getenv('google_api_token')
+cx = os.getenv('cx')
 
 
 class Movie(StatesGroup):
@@ -22,9 +28,47 @@ class Movie(StatesGroup):
 class Keyword(StatesGroup):
     word = State()
 
+
 class Cinematography(StatesGroup):
     name = State()
 
+# проверка есть ли такой фильм в "Кинопоиске" вообще
+def check_the_correct_spelling_on_the_internet(text: str) -> str | None:
+    response = requests.get(f'https://www.googleapis.com/customsearch/v1?key={google_api_key}&cx={cx}&q={text}')
+    if response.ok:
+        json_data = json.loads(response.text)
+        jsonpath_title = parse('$.items[0].title')
+        film_title = jsonpath_title.find(json_data)
+        title: str = film_title[0].value
+        sep = '('
+        if sep is title:
+            normal = title.split(sep, 1)[0].strip()
+            return normal
+        sep2 = '-'
+        if sep2 is title:
+            normal = title.split(sep2, 1)[0].strip()
+            return normal
+    else:
+        return None
+
+#  проверка грамматики
+def check_text_for_correct_spelling(text: str) -> str | None:
+    txt1 = text.split()
+    spell = SpellChecker(language='ru')
+    misspelled = spell.unknown(txt1)
+    for word in misspelled:
+        right_writing = spell.correction(word)
+        if right_writing is not None:
+            normal = text.replace(word, right_writing)
+            return normal
+        else:
+            return check_the_correct_spelling_on_the_internet(text)
+    return  text
+
+
+# кнопки для пользователя
+########################################################################################################################
+# кнопки добавления и просмотра
 def webpage_and_favorites_list_add_handler(film_id: str):
     markup = InlineKeyboardMarkup()
     film_id = film_id.replace(',', '').replace('(', '').replace(')', '')
@@ -37,6 +81,7 @@ def webpage_and_favorites_list_add_handler(film_id: str):
     return markup
 
 
+#  кнопка следующая страница
 def next_button_handler(page_number: str):
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton('Следующий', callback_data=page_number))
@@ -181,14 +226,22 @@ async def callback_query(call):
 #  поиск
 @bot.message_handler(func=lambda message: True)
 async def send_film_by_film_name(message):
-    try:
-        links = VX().get_film_link_by_name(message.text)
-        for link in links:
-            for key, value in link.items():
-                await bot.send_message(message.chat.id, value, parse_mode='html',
-                                       reply_markup=webpage_and_favorites_list_add_handler(str(key)))
-    except Exception as e:
-        print(traceback.format_exc())
+    normal_message = check_text_for_correct_spelling(message.text)
+    if normal_message is not None:
+        try:
+            links = VX().get_film_link_by_name(normal_message)
+            if links:
+                for link in links:
+                    for key, value in link.items():
+                        await bot.send_message(message.chat.id, value, parse_mode='html',
+                                               reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+            else:
+                await  bot.send_message(message.chat.id, 'По вашему запросу ничего не найдено', parse_mode='html')
+        except Exception as e:
+            print(traceback.format_exc())
+    else:
+        await  bot.send_message(message.chat.id,'По вашему запросу ничего не найдено', parse_mode='html')
+
 
 
 if __name__ == '__main__':
