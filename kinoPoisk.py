@@ -8,7 +8,7 @@ from Data.Billboard import Billboard
 from Data.Cinema import Cinema
 from Data.Description import Description
 from Data.Film import Film
-from SearcherKinoPoisk import Searcher
+from searcherKinoPoisk import Searcher
 
 
 class KinoPoisk(object):

@@ -5,7 +5,7 @@ import requests
 from jsonpath_ng import parse
 
 from Data.Billboard import Cinema
-from KinoPoisk import KinoPoisk
+from kinoPoisk import KinoPoisk
 
 
 class VX(object):
