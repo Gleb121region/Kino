@@ -10,10 +10,9 @@ class Searcher(object):
         params = {'kp_query': query}
         session = requests.session()
         response = session.get(url=self.__URL, params=params)
-        if response:
+        if response.ok:
             content = response.content.decode('utf-8')
             if 'captcha' in content:
-                # raise ValueError('Kino poisk block this IP. Too many requests')
                 return None
             return content
 
@@ -29,7 +28,7 @@ class Searcher(object):
                     my_dict = {'film_name': movie_name, 'film_id': movie_id}
                     list_film_id.append(my_dict)
             return list_film_id
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, "lxml")
         list_film_id = []
         tmp_href = ''
         for a in (a_data_id for a_data_id in soup.select('a[data-id]') if

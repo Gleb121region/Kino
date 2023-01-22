@@ -8,7 +8,7 @@ class Movie(Model):
     movie_title = TextField()
     movie_poster_url = TextField(unique=True)
     movie_year = DateField()
-    movie_country = TextField
+    movie_country = TextField()
     movie_genre = TextField()
     movie_rating = FloatField()
 
@@ -57,5 +57,5 @@ class User2Movie(Model):
 
     class Meta:
         database = db
-        order_by = 'id'
+        order_by = 'user_movie_id'
         db_table = 'user2movies'

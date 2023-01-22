@@ -163,7 +163,7 @@ async def send_background(message: types.Message):
                                        disable_notification=True,
                                        reply_markup=webpage_and_favorites_list_add_handler(str(key)))
     except Exception as e:
-        print()
+        print(traceback.format_exc())
 
 
 #  кнопочки
