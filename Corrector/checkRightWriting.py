@@ -8,7 +8,6 @@ from spellchecker import SpellChecker
 google_api_key = os.getenv('google_api_token')
 cx = os.getenv('cx')
 
-
 # проверка есть ли такой фильм в "Кинопоиске" вообще
 def check_the_correct_spelling_on_the_internet(text: str) -> str | None:
     response = requests.get(f'https://www.googleapis.com/customsearch/v1?key={google_api_key}&cx={cx}&q={text}')

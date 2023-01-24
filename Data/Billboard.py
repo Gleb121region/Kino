@@ -1,5 +1,8 @@
-from Data import Cinema
+import re
 
+from Data import Cinema
+from Text.messagesPattern import stencil
+from converterStringDataToMinet import hms_to_s
 
 class Billboard(object):
     def __init__(self,
@@ -9,37 +12,25 @@ class Billboard(object):
     def send_message_in_tg(self) -> list[dict]:
         list_film_about: list[dict] = []
         for cinemas in self.list_film:
-            county_str: str = ''
-            for county in cinemas.country:
-                if county is dict:
-                    county_str += county.get('country') + ' '
-                if county is list:
-                    county_str += county
-
-
             genre_str: str = ''
             for genre in cinemas.genre:
                 genre_str += genre.get('genre') + ' '
-            length = str(cinemas.length)
-            if length.casefold() != 'None'.casefold():
-                text = f'<b>{cinemas.name}</b>\n' \
-                       f'Постер: {cinemas.poster}\n' \
-                       f'Год производства: {cinemas.year}\n' \
-                       f'Длительность: {length}\n' \
-                       f'Страна: {county_str}\n' \
-                       f'Жанр: {genre_str}\n' \
-                       f'Рейтинг по отзывам: {cinemas.rating}'.replace("(", '').replace(")", '').replace(",", '') \
-                    .replace("'", '')
-            else:
-                text = f'<b>{cinemas.name}</b>\n' \
-                       f'Постер: {cinemas.poster}\n' \
-                       f'Год производства: {cinemas.year}\n' \
-                       f'Страна: {county_str}\n' \
-                       f'Жанр: {genre_str}\n' \
-                       f'Рейтинг по отзывам: {cinemas.rating}' \
-                    .replace("(", '').replace(")", '') \
-                    .replace(",", '').replace("'", '')
-            MyDictionary = {cinemas.film_id: text}
+
+            movie_title = re.search(r'[\w+\s+]+', str(cinemas.name)).group(0)
+            movie_poster_url = cinemas.poster
+            movie_year = re.search(r'\d+', str(cinemas.year)).group(0)
+            movie_length = hms_to_s(re.search(r'\d+.\d+', str(cinemas.length)).group(0))
+            movie_country = ' '.join(map(str, re.findall(r'\w+', str(cinemas.country))[1:]))
+            movie_genre = ' '.join(map(str, re.findall(r'\w+', str(genre_str))[0:]))
+            movie_rating = re.search(r'\d+\.\d+', str(cinemas.rating)).group(0)
+
+            text = stencil(movie_title, movie_poster_url, movie_year, movie_length, movie_country, movie_genre,
+                           movie_rating)
+
+            movie_id = re.search(r'\d+', str(cinemas.film_id)).group(0)
+            movie_video_url = VX().get_film_link_by_kinopoisk_id(int(movie_id))
+
+            MyDictionary = {movie_video_url: text}
             list_film_about.append(MyDictionary)
         return list_film_about
 

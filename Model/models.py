@@ -6,8 +6,10 @@ db = SqliteDatabase('telebot.db')
 class Movie(Model):
     movie_id = PrimaryKeyField(unique=True, null=False)
     movie_title = TextField()
+    movie_video_url = TextField(unique=True)
     movie_poster_url = TextField(unique=True)
     movie_year = DateField()
+    movie_len = TextField()
     movie_country = TextField()
     movie_genre = TextField()
     movie_rating = FloatField()
@@ -16,9 +18,8 @@ class Movie(Model):
     def list():
         query = Movie.select()
         for row in query:
-            print(row.movie_id, row.movie_title, row.movie_poster_url, row.movie_year, row.movie_country,
-                  row.movie_genre,
-                  row.movie_rating)
+            print(row.movie_id, row.movie_title, row.movie_video_url, row.movie_poster_url,
+                  row.movie_year, row.movie_len, row.movie_country, row.movie_genre, row.movie_rating)
 
     class Meta:
         database = db

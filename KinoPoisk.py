@@ -8,18 +8,19 @@ from Data.Billboard import Billboard
 from Data.Cinema import Cinema
 from Data.Description import Description
 from Data.Film import Film
+from Model import models
 from searcherKinoPoisk import Searcher
 
 
 class KinoPoisk(object):
     __URL = 'https://kinopoiskapiunofficial.tech/api/v2.2/films/'
-    __KEYS_KINOPOISK_API_UNOFFICIAL = os.getenv('KEYS_KINOPOISK_API_UNOFFICIAL').split()
+    __KEYS_KINO_POISK_API_UNOFFICIAL = os.getenv('KEYS_KINOPOISK_API_UNOFFICIAL').split()
     __id_kino_poisk = ''
 
     def get_json_by_url(self, url: str) -> dict | None:
-        if not self.__KEYS_KINOPOISK_API_UNOFFICIAL:
+        if not self.__KEYS_KINO_POISK_API_UNOFFICIAL:
             return None
-        for key in self.__KEYS_KINOPOISK_API_UNOFFICIAL:
+        for key in self.__KEYS_KINO_POISK_API_UNOFFICIAL:
             try:
                 res = requests.get(url=url, headers={'X-API-KEY': key, 'Content-Type': 'application/json'})
                 if res.ok:
@@ -191,14 +192,15 @@ class KinoPoisk(object):
                                                                                list_film_len, list_film_country,
                                                                                list_film_genre, list_film_rating,
                                                                                list_film_poster):
-            cinema: Cinema = Cinema(film_id=film_id,
-                                    name=name,
-                                    year=year,
-                                    length=length,
-                                    country=country,
-                                    genre=genre,
-                                    rating=rating,
-                                    poster=poster)
+            cinema: Cinema = Cinema(film_id=film_id, name=name, year=year, length=length,
+                                    country=country, genre=genre, rating=rating, poster=poster)
+            with models.db:
+                from VX import VX
+                movie = models.Movie(movie_id=film_id, movie_title=str(name).lower(), movie_rating=rating, movie_genre=genre,
+                                     movie_poster_url=poster, movie_len=length, movie_year=year, movie_country=country,
+                                     movie_video_url=VX().get_film_link_by_kinopoisk_id(film_id)
+                                     ).save(force_insert=True)
+
             list_movie.append(cinema)
         obj = Billboard(list_movie)
         return obj

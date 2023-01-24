@@ -7,7 +7,7 @@ from jsonpath_ng import parse
 
 from Data.Billboard import Cinema
 from Model import models
-from kinoPoisk import KinoPoisk
+from Text.messagesPattern import stencil
 
 
 class VX(object):
@@ -18,6 +18,7 @@ class VX(object):
         return requests.get(self.__URL, params=params).text
 
     def get_film_link_by_name(self, name_film: str) -> list[dict]:
+        from KinoPoisk import KinoPoisk
         list_kino_poisk: list[Cinema] = KinoPoisk().get_id_kino_poisk(name_film)
         list_links: list[dict] = []
         for item in list_kino_poisk:
@@ -34,22 +35,21 @@ class VX(object):
                 movie_country = ' '.join(map(str, re.findall(r'\w+', str(item.country))[1:]))
                 movie_genre = re.search(r'\w+', str(item.genre)).group(0)
                 movie_rating = re.search(r'\d+\.\d+', str(item.rating)).group(0)
+                text = stencil(movie_title, movie_poster_url, movie_year, movie_len, movie_country, movie_genre,
+                               movie_rating)
                 movie_id = re.search(r'\d+', str(item.film_id)).group(0)
-
-                text = f'<b> {movie_title}</b>\n' \
-                       f'Постер: {movie_poster_url}\n' \
-                       f'Год производства: {movie_year}\n' \
-                       f'Длительность: {movie_len} мин\n' \
-                       f'Страна: {movie_country}\n' \
-                       f'Жанр: {movie_genre}\n' \
-                       f'Рейтинг по отзывам: {movie_rating}'
+                movie_video_url = self.get_film_link_by_kinopoisk_id(int(movie_id))
                 with models.db:
-                    movie = models.Movie(movie_id = movie_id,
-                        movie_title=movie_title, movie_poster_url=movie_poster_url,
-                                         movie_year=movie_year, movie_country=movie_country, movie_genre=movie_genre,
+                    movie = models.Movie(movie_id=movie_id,
+                                         movie_title=movie_title,
+                                         movie_poster_url=movie_poster_url,
+                                         movie_video_url=movie_video_url,
+                                         movie_len=movie_len,
+                                         movie_year=movie_year,
+                                         movie_country=movie_country,
+                                         movie_genre=movie_genre,
                                          movie_rating=movie_rating).save(force_insert=True)
-                    print('Movie add')
-                my_dict = {item.film_id: text}
+                my_dict = {movie_video_url: text}
                 list_links.append(my_dict)
             else:
                 return list_links

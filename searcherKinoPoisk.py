@@ -6,7 +6,7 @@ from kinopoisk.movie import Movie
 class Searcher(object):
     __URL: str = 'https://www.kinopoisk.ru/index.php'
 
-    def give_html(self, query: str) -> str | None:
+    def __give_html(self, query: str) -> str | None:
         params = {'kp_query': query}
         session = requests.session()
         response = session.get(url=self.__URL, params=params)
@@ -17,7 +17,7 @@ class Searcher(object):
             return content
 
     def parse(self, query: str) -> list[dict[str, str]]:
-        html = self.give_html(query)
+        html = self.__give_html(query)
         if html is None:
             list_film_id = []
             for i in range(5):
