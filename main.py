@@ -2,6 +2,7 @@ import asyncio
 import os
 import traceback
 
+from loguru import logger
 from telebot import asyncio_filters
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
@@ -20,24 +21,23 @@ bot = AsyncTeleBot(os.getenv('telegram_token'), state_storage=StateMemoryStorage
 # кнопки для пользователя
 ########################################################################################################################
 # кнопки добавления и просмотра
-# def webpage_and_favorites_list_add_handler(message: types.Message, film_id: str):
-def webpage_and_favorites_list_add_handler(film_movie_ulr: str):
+def video_url_and_favorites_list_button_creator(film_movie_ulr: str):
     markup = InlineKeyboardMarkup()
     film_id: int = get_movie_id_by_movie_video_url(film_movie_ulr)
     if film_movie_ulr is None:
         markup.add(
-            InlineKeyboardButton(add_to_favorites, callback_data=film_id)
+            InlineKeyboardButton(add_to_favorites_text, callback_data=film_id)
         )
     else:
         markup.add(
-            InlineKeyboardButton(add_to_favorites, callback_data=film_id),
-            InlineKeyboardButton(view_link, url=film_movie_ulr)
+            InlineKeyboardButton(add_to_favorites_text, callback_data=film_id),
+            InlineKeyboardButton(view_link_text, url=film_movie_ulr)
         )
     return markup
 
 
 #  кнопка следующая страница
-def next_button_handler(page_number: str):
+def next_button_creator(page_number: str):
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton(next_button_text, callback_data=page_number))
     return markup
@@ -50,7 +50,6 @@ async def send_welcome(message: types.Message):
     user_id = message.from_user.id
     full_name: str = message.from_user.full_name
     username = message.from_user.username
-    #  добавления пользователя в базу
     with models.db:
         user = models.User(user_id=user_id, username=username, full_name=full_name).save(force_insert=True)
     message_for_user: str = f'<b>Привет, {full_name} Этот бот показывает фильмы по запросу попробуй</b>'
@@ -62,20 +61,23 @@ async def send_welcome(message: types.Message):
 # команда для отправления топа фильмов
 @bot.message_handler(commands=['top'])
 async def send_top_film(message: types.Message):
-    page_number = 1
-    billboard = KinoPoisk().give_top_films(page_number)
-    for film_info in billboard.send_message_in_tg():
-        for key, value in film_info.items():
-            await bot.send_message(message.chat.id,
-                                   value,
-                                   parse_mode='html',
-                                   disable_notification=True,
-                                   reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+    try:
+        page_number = 1
+        billboard = KinoPoisk().give_top_films(page_number)
+        for film_info in billboard.send_message_in_tg():
+            for key, value in film_info.items():
+                await bot.send_message(message.chat.id,
+                                       value,
+                                       parse_mode='html',
+                                       disable_notification=True,
+                                       reply_markup=video_url_and_favorites_list_button_creator(str(key)))
 
-    await  bot.send_message(message.chat.id,
-                            attention,
-                            disable_notification=True,
-                            reply_markup=next_button_handler(str(page_number + 1)))
+        await  bot.send_message(message.chat.id,
+                                attention_text,
+                                disable_notification=True,
+                                reply_markup=next_button_creator(str(page_number + 1)))
+    except Exception as e:
+        print(traceback.format_exc())
 
 
 # команды со state
@@ -86,7 +88,7 @@ async def handler_send_recommendation(message: types.Message):
     force_reply = types.ForceReply(True)
     await bot.set_state(message.from_user.id, Movie.name, message.chat.id)
     await bot.send_message(message.chat.id,
-                           enter_movie_title,
+                           enter_movie_title_text,
                            reply_to_message_id=message.message_id,
                            reply_markup=force_reply)
 
@@ -95,7 +97,7 @@ async def handler_send_recommendation(message: types.Message):
 async def send_recommendation(message: types.Message):
     try:
         film_name = message.text.lower()
-        message_for_user = if_like.format(film_name)
+        message_for_user = if_like_text.format(film_name)
         await bot.send_message(message.chat.id, message_for_user)
         list_similar_films = KinoPoisk().give_recommendations(str(film_name))
         for film in list_similar_films:
@@ -104,7 +106,7 @@ async def send_recommendation(message: types.Message):
                                        value,
                                        parse_mode='html',
                                        disable_notification=True,
-                                       reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+                                       reply_markup=video_url_and_favorites_list_button_creator(str(key)))
         await bot.delete_state(message.from_user.id, message.chat.id)
     except Exception as e:
         print(traceback.format_exc())
@@ -116,7 +118,7 @@ async def handler_send_film_by_keyword(message: types.Message):
     force_reply = types.ForceReply(True)
     await bot.set_state(message.from_user.id, Keyword.word, message.chat.id)
     await bot.send_message(message.chat.id,
-                           enter_key_word,
+                           enter_key_word_text,
                            reply_to_message_id=message.message_id,
                            reply_markup=force_reply)
 
@@ -133,7 +135,7 @@ async def send_film_by_keyword(message: types.Message):
                                        value,
                                        parse_mode='html',
                                        disable_notification=True,
-                                       reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+                                       reply_markup=video_url_and_favorites_list_button_creator(str(key)))
         await bot.delete_state(message.from_user.id, message.chat.id)
     except Exception as e:
         print(traceback.format_exc())
@@ -145,7 +147,7 @@ async def handler_send_background(message: types.Message):
     force_reply = types.ForceReply(True)
     await bot.set_state(message.from_user.id, Keyword.word, message.chat.id)
     await bot.send_message(message.chat.id,
-                           enter_movie_title,
+                           enter_movie_title_text,
                            reply_to_message_id=message.message_id,
                            reply_markup=force_reply)
 
@@ -159,7 +161,7 @@ async def send_background(message: types.Message):
                                        value,
                                        parse_mode='html',
                                        disable_notification=True,
-                                       reply_markup=webpage_and_favorites_list_add_handler(str(key)))
+                                       reply_markup=video_url_and_favorites_list_button_creator(str(key)))
     except Exception as e:
         print(traceback.format_exc())
 
@@ -167,51 +169,66 @@ async def send_background(message: types.Message):
 #  кнопочки
 @bot.callback_query_handler(func=lambda call: call.data.isdigit() == True)
 async def callback_query(call):
-    kino = KinoPoisk()
-    page_number = int(call.data)
-    billboard = kino.give_top_films(page_number)
-    for film_info in billboard.send_message_in_tg():
-        for key, value in film_info.items():
-            await bot.send_message(call.message.chat.id,
-                                   value,
-                                   parse_mode='html',
-                                   disable_notification=True,
-                                   reply_markup=webpage_and_favorites_list_add_handler(str(key)))
-    await  bot.send_message(call.message.chat.id,
-                            attention,
-                            disable_notification=True,
-                            reply_markup=next_button_handler(str(page_number + 1)))
+    digit = call.data
+    if len(digit) == 1:
+        kino = KinoPoisk()
+        page_number = int(digit)
+        billboard = kino.give_top_films(page_number)
+        for film_info in billboard.send_message_in_tg():
+            for key, value in film_info.items():
+                await bot.send_message(call.message.chat.id,
+                                       value,
+                                       parse_mode='html',
+                                       disable_notification=True,
+                                       reply_markup=video_url_and_favorites_list_button_creator(str(key)))
+        await  bot.send_message(call.message.chat.id,
+                                attention_text,
+                                disable_notification=True,
+                                reply_markup=next_button_creator(str(page_number + 1)))
+    else:
+        film_id = int(digit)
+        user_id = call.from_user.id
+        with models.db:
+            models.User2Movie.create(
+                user_id=user_id,
+                movie_id=film_id
+            )
+
+    await bot.send_message(call.message.chat.id, add_a_movie_to_favorites_text, disable_notification=True)
 
 
 #  поиск фильмов
 @bot.message_handler(func=lambda message: True)
 async def send_film_by_film_name(message):
-    query_film: str = message.text.lower()
+    query_film: str = message.text.lower().capitalize()
+    logger.info(query_film)
     links = get_movie_by_film_title(query_film)
+    # DB
     if links:
-        print('Чтение из бд')
         for link in links:
             for key, value in link.items():
                 await bot.send_message(message.chat.id,
                                        value,
                                        parse_mode='html',
-                                       reply_markup=webpage_and_favorites_list_add_handler(key))
-    try:
-        links = VX().get_film_link_by_name(query_film)
-        if links:
-            print('Чтение данных из апи')
-            for link in links:
-                for key, value in link.items():
-                    await bot.send_message(message.chat.id,
-                                           value,
-                                           parse_mode='html',
-                                           reply_markup=webpage_and_favorites_list_add_handler(key))
-        else:
-            await  bot.send_message(message.chat.id,
-                                    sorry_film_did_not_fild,
-                                    parse_mode='html')
-    except Exception as e:
-        print(traceback.format_exc())
+                                       reply_markup=video_url_and_favorites_list_button_creator(key))
+        return
+    # API
+    else:
+        try:
+            links = VX().get_film_link_by_name(query_film)
+            if links:
+                for link in links:
+                    for key, value in link.items():
+                        await bot.send_message(message.chat.id,
+                                               value,
+                                               parse_mode='html',
+                                               reply_markup=video_url_and_favorites_list_button_creator(key))
+            else:
+                await  bot.send_message(message.chat.id,
+                                        sorry_film_did_not_fild_text,
+                                        parse_mode='html')
+        except Exception as e:
+            print(traceback.format_exc())
 
 
 if __name__ == '__main__':

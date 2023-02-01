@@ -30,14 +30,13 @@ class Movie(Model):
 class User(Model):
     user_id = IntegerField(unique=True, null=False)
     username = CharField()
-    first_name = CharField()
-    last_name = CharField(null=True)
+    full_name = CharField()
 
     @staticmethod
     def list():
         query = User.select()
         for row in query:
-            print(row.user_id, row.username, row.first_name, row.last_name)
+            print(row.user_id, row.username, row.full_name, row.last_name)
 
     class Meta:
         database = db

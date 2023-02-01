@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import requests
 from jsonpath_ng import parse
@@ -10,6 +11,8 @@ from Data.Description import Description
 from Data.Film import Film
 from Model import models
 from searcherKinoPoisk import Searcher
+from converterStringDataToMinet import hms_to_s
+
 
 
 class KinoPoisk(object):
@@ -168,7 +171,7 @@ class KinoPoisk(object):
         film_year = jsonpath_year.find(json_data)
         jsonpath_film_len = parse('$.films[*].filmLength')
         film_len = jsonpath_film_len.find(json_data)
-        jsonpath_country = parse('$.films[*].countries[*]')
+        jsonpath_country = parse('$.films[*].countries')
         film_country = jsonpath_country.find(json_data)
         jsonpath_genre = parse('$.films[*].genres')
         film_genre = jsonpath_genre.find(json_data)
@@ -192,14 +195,31 @@ class KinoPoisk(object):
                                                                                list_film_len, list_film_country,
                                                                                list_film_genre, list_film_rating,
                                                                                list_film_poster):
-            cinema: Cinema = Cinema(film_id=film_id, name=name, year=year, length=length,
+            length = hms_to_s(length)
+            cinema: Cinema = Cinema(film_id=film_id,
+                                    name=name,
+                                    year=year,
+                                    length=length,
                                     country=country, genre=genre, rating=rating, poster=poster)
             with models.db:
                 from VX import VX
-                movie = models.Movie(movie_id=film_id, movie_title=str(name).lower(), movie_rating=rating, movie_genre=genre,
-                                     movie_poster_url=poster, movie_len=length, movie_year=year, movie_country=country,
-                                     movie_video_url=VX().get_film_link_by_kinopoisk_id(film_id)
-                                     ).save(force_insert=True)
+                query = models.Movie.select().where(models.Movie.movie_id == film_id)
+                movie_selected = query.dicts().execute()
+                if len(movie_selected) == 0:
+                    country = re.findall(r"'(.*?)'", str(country))[1::2]
+                    country = re.sub(r"\[|'|\]", "", str(country))
+                    genre = re.findall(r"'(.*?)'", str(genre))[1::2]
+                    genre = re.sub(r"\[|'|\]", "", str(genre))
+                    models.Movie.create(movie_id=film_id,
+                                        movie_title=str(name).lower().capitalize(),
+                                        movie_rating=rating,
+                                        movie_genre=genre,
+                                        movie_poster_url=poster,
+                                        movie_len=length,
+                                        movie_year=year,
+                                        movie_country=country,
+                                        movie_video_url=VX().get_film_link_by_kinopoisk_id(film_id)
+                                        )
 
             list_movie.append(cinema)
         obj = Billboard(list_movie)

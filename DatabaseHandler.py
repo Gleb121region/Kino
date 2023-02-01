@@ -11,7 +11,7 @@ def get_movie_id_by_movie_video_url(movie_video_url: str) -> int:
 def get_movie_by_film_title(movie_title: str) -> list[dict[str, str]] | None:
     list_dict: list[dict[str, str]] = []
     with models.db:
-        query = models.Movie.select().where(models.Movie.movie_title == movie_title.casefold())
+        query = models.Movie.select().where(models.Movie.movie_title == movie_title)
         movie_selected = query.dicts().execute()
         if len(movie_selected) > 0:
             for movie in movie_selected:

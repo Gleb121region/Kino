@@ -28,27 +28,27 @@ class VX(object):
             jsonpath_expression = parse('$.data[*].iframe_src')
             match = jsonpath_expression.find(json_data)
             if len(match) > 0:
-                movie_title = re.search(r'[\w+\s+]+', str(item.name)).group(0)
+                movie_title = re.search(r'[\w+-?\s+]+', str(item.name)).group(0)
                 movie_poster_url = item.poster
                 movie_year = re.search(r'\d+', str(item.year)).group(0)
                 movie_len = re.search(r'\d+', str(item.length)).group(0)
                 movie_country = ' '.join(map(str, re.findall(r'\w+', str(item.country))[1:]))
-                movie_genre = re.search(r'\w+', str(item.genre)).group(0)
+                movie_genre = re.sub(r"\[|'|\]", "", str(item.genre))
                 movie_rating = re.search(r'\d+\.\d+', str(item.rating)).group(0)
                 text = stencil(movie_title, movie_poster_url, movie_year, movie_len, movie_country, movie_genre,
                                movie_rating)
                 movie_id = re.search(r'\d+', str(item.film_id)).group(0)
                 movie_video_url = self.get_film_link_by_kinopoisk_id(int(movie_id))
                 with models.db:
-                    movie = models.Movie(movie_id=movie_id,
-                                         movie_title=movie_title,
-                                         movie_poster_url=movie_poster_url,
-                                         movie_video_url=movie_video_url,
-                                         movie_len=movie_len,
-                                         movie_year=movie_year,
-                                         movie_country=movie_country,
-                                         movie_genre=movie_genre,
-                                         movie_rating=movie_rating).save(force_insert=True)
+                    models.Movie.create(movie_id=movie_id,
+                                        movie_title=movie_title.lower().capitalize(),
+                                        movie_poster_url=movie_poster_url,
+                                        movie_video_url=movie_video_url,
+                                        movie_len=movie_len,
+                                        movie_year=movie_year,
+                                        movie_country=movie_country,
+                                        movie_genre=movie_genre,
+                                        movie_rating=movie_rating)
                 my_dict = {movie_video_url: text}
                 list_links.append(my_dict)
             else:

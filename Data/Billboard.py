@@ -19,7 +19,7 @@ class Billboard(object):
             movie_title = re.search(r'[\w+\s+]+', str(cinemas.name)).group(0)
             movie_poster_url = cinemas.poster
             movie_year = re.search(r'\d+', str(cinemas.year)).group(0)
-            movie_length = hms_to_s(re.search(r'\d+.\d+', str(cinemas.length)).group(0))
+            movie_length = hms_to_s(re.search(r'\d+', str(cinemas.length)).group(0))
             movie_country = ' '.join(map(str, re.findall(r'\w+', str(cinemas.country))[1:]))
             movie_genre = ' '.join(map(str, re.findall(r'\w+', str(genre_str))[0:]))
             movie_rating = re.search(r'\d+\.\d+', str(cinemas.rating)).group(0)
@@ -28,6 +28,7 @@ class Billboard(object):
                            movie_rating)
 
             movie_id = re.search(r'\d+', str(cinemas.film_id)).group(0)
+            from VX import VX
             movie_video_url = VX().get_film_link_by_kinopoisk_id(int(movie_id))
 
             MyDictionary = {movie_video_url: text}
