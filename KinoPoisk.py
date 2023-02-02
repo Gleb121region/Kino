@@ -9,10 +9,9 @@ from Data.Billboard import Billboard
 from Data.Cinema import Cinema
 from Data.Description import Description
 from Data.Film import Film
-from Model import models
-from searcherKinoPoisk import Searcher
+from DatabaseHandler import add_movie
 from converterStringDataToMinet import hms_to_s
-
+from searcherKinoPoisk import Searcher
 
 
 class KinoPoisk(object):
@@ -20,19 +19,18 @@ class KinoPoisk(object):
     __KEYS_KINO_POISK_API_UNOFFICIAL = os.getenv('KEYS_KINOPOISK_API_UNOFFICIAL').split()
     __id_kino_poisk = ''
 
-    def get_json_by_url(self, url: str) -> dict | None:
+    def get_json_by_url(self, url: str) -> dict:
         if not self.__KEYS_KINO_POISK_API_UNOFFICIAL:
-            return None
+            raise Exception('Не импортировал токен для кино поиск api')
         for key in self.__KEYS_KINO_POISK_API_UNOFFICIAL:
             try:
                 res = requests.get(url=url, headers={'X-API-KEY': key, 'Content-Type': 'application/json'})
                 if res.ok:
-                    json_data = json.loads(res.text)
-                    return json_data
+                    return json.loads(res.text)
                 else:
                     pass
             except (ConnectionError, json.JSONDecodeError) as error:
-                pass
+                print(error)
 
     def get_id_kino_poisk(self, movie_name: str) -> list[Cinema]:
         movie_list = Searcher().parse(movie_name)
@@ -87,19 +85,36 @@ class KinoPoisk(object):
         movie_dict_list = Searcher().parse(query=movie_name)
         self.__id_kino_poisk = str(movie_dict_list[0]['film_id'])
 
+    # добавлять в  БД
     def give_recommendations(self, name: str) -> list[Film]:
         self.set_id_kino_poisk(name)
         url: str = self.__URL + self.__id_kino_poisk + '/similars'
-        json_data = self.get_json_by_url(url=url)
+        json_data = self.get_json_by_url(url)
         jsonpath_name = parse('$.items[*].nameRu')
         jsonpath_film_id = parse('$.items[*].filmId')
         names = jsonpath_name.find(json_data)
         ids = jsonpath_film_id.find(json_data)
         list_films: list[Film] = []
         for name, id_string in zip(names, ids):
-            film_info = Film(film_name=name.value,
-                             film_id=int(id_string.value),
-                             description=self.give_data_about_film(int(id_string.value)))
+            film_id = int(id_string.value)
+            film_name = name.value
+            description = self.give_data_about_film(int(id_string.value))
+            year = re.search(r"\d+", str(description.year)).group(0)
+            length = re.search(r"\d+", str(description.length)).group(0)
+            country = description.country
+            genre = description.genre
+            rating = re.search(r'\d+.\d+', str(description.rating)).group(0)
+            poster = re.search(r'[\w:/.]+', str(description.poster)).group(0)
+
+            add_movie(film_id, film_name, year, length, country, genre, rating, poster)
+
+            country_write = ' '.join(map(str, re.findall(r'\w+', str(country))[1:]))
+            genre_write = ' '.join(map(str, re.findall(r'\w+', str(genre))[1::2]))
+
+            description = Description(poster, rating, year, country_write.replace('country', ''), genre_write, length)
+
+            film_info = Film(film_name=film_name, film_id=film_id, description=description)
+
             list_films.append(film_info)
         return list_films
 
@@ -119,44 +134,24 @@ class KinoPoisk(object):
         years = jsonpath_year.find(json_data)
         year = years[0].value
 
-        jsonpath_description = parse('$.description')
-        descriptions = jsonpath_description.find(json_data)
-        description_data = descriptions[0].value
-
-        jsonpath_type = parse('$.type')
-        types = jsonpath_type.find(json_data)
-        data_type = types[0].value
-
-        jsonpath_county = parse('$.countries[*].country')
+        jsonpath_county = parse('$.countries')
         counties = jsonpath_county.find(json_data)
         list_counties = list(map(lambda x: x.value, counties))
 
-        jsonpath_genres = parse('$.genres[*].genre')
+        jsonpath_genres = parse('$.genres')
         genres = jsonpath_genres.find(json_data)
         list_genres = list(map(lambda x: x.value, genres))
 
-        jsonpath_filmLength = parse('$..filmLength')
+        jsonpath_filmLength = parse('$.filmLength')
         duration = jsonpath_filmLength.find(json_data)
         data_duration = duration[0].value
-
-        jsonpath_start_year = parse('$.startYear')
-        start_years = jsonpath_start_year.find(json_data)
-        start_year = start_years[0].value
-
-        jsonpath_end_year = parse('$.endYear')
-        end_years = jsonpath_end_year.find(json_data)
-        end_year = end_years[0].value
 
         data = Description(poster=poster,
                            rating=rating,
                            year=year,
-                           description=description_data,
-                           type=data_type,
-                           countries=list_counties,
-                           genres=list_genres,
-                           start_year=start_year,
-                           end_year=end_year,
-                           duration=data_duration)
+                           country=list_counties,
+                           genre=list_genres,
+                           length=data_duration)
         return data
 
     def give_top_films(self, page_num: int) -> Billboard:
@@ -201,26 +196,8 @@ class KinoPoisk(object):
                                     year=year,
                                     length=length,
                                     country=country, genre=genre, rating=rating, poster=poster)
-            with models.db:
-                from VX import VX
-                query = models.Movie.select().where(models.Movie.movie_id == film_id)
-                movie_selected = query.dicts().execute()
-                if len(movie_selected) == 0:
-                    country = re.findall(r"'(.*?)'", str(country))[1::2]
-                    country = re.sub(r"\[|'|\]", "", str(country))
-                    genre = re.findall(r"'(.*?)'", str(genre))[1::2]
-                    genre = re.sub(r"\[|'|\]", "", str(genre))
-                    models.Movie.create(movie_id=film_id,
-                                        movie_title=str(name).lower().capitalize(),
-                                        movie_rating=rating,
-                                        movie_genre=genre,
-                                        movie_poster_url=poster,
-                                        movie_len=length,
-                                        movie_year=year,
-                                        movie_country=country,
-                                        movie_video_url=VX().get_film_link_by_kinopoisk_id(film_id)
-                                        )
-
+            print(country)
+            add_movie(film_id, name, year, length, country, genre, rating, poster)
             list_movie.append(cinema)
         obj = Billboard(list_movie)
         return obj
