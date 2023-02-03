@@ -11,8 +11,6 @@ class Billboard(object):
         self.list_film = list_film
 
     def send_message_in_tg(self) -> list[dict]:
-        movie_year = ''
-        movie_rating = ''
         list_film_about: list[dict] = []
         for cinemas in self.list_film:
             genre_str: str = ''
@@ -34,7 +32,7 @@ class Billboard(object):
 
             movie_id = re.search(r'\d+', str(cinemas.film_id)).group(0)
             from VX import VX
-            movie_video_url = VX().get_film_link_by_kinopoisk_id(int(movie_id))
+            movie_video_url = VX().get_film_link_by_kinoP_id(int(movie_id))
 
             MyDictionary = {movie_video_url: text}
             list_film_about.append(MyDictionary)
