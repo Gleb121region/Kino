@@ -47,7 +47,6 @@ def next_button_creator(page_number: str):
 ########################################################################################################################
 @bot.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
-    await bot.send_contact(chat_id=message.chat.id, first_name='Глеб', phone_number='+79061337450')
     full_name: str = message.from_user.full_name
     add_user(user_id=message.from_user.id, username=message.from_user.username, full_name=full_name)
     message_for_user: str = f'<b>Привет, {full_name} Этот бот показывает фильмы по запросу попробуй</b>'
