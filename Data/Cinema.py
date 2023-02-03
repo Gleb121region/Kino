@@ -3,7 +3,7 @@ class Cinema(object):
                  name,
                  year,
                  length,
-                 country: dict[str],
+                 country: list[dict[str]],
                  genre: list[dict[str]],
                  rating,
                  poster):

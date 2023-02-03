@@ -36,6 +36,7 @@ class Searcher(object):
             href = a.get('href')
             if href.endswith('sr/1/') and a.text != '':
                 if href != tmp_href:
+                    print(a.text)
                     film_name = a.text.replace('\xa0', ' ').replace(' (сериал)'.casefold(), '').replace(
                         '(мини-сериал)'.casefold(), '').strip()
                     if film_name.casefold() == query.casefold():

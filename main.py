@@ -212,8 +212,8 @@ async def send_film_by_film_name(message):
     query_film: str = message.text.lower().capitalize()
     logger.info(query_film)
     links = get_movie_by_film_title(query_film)
-    # DB
-    if links:
+    if links:  # DB
+        logger.info("DB")
         for link in links:
             for key, value in link.items():
                 await bot.send_message(message.chat.id,
@@ -221,8 +221,8 @@ async def send_film_by_film_name(message):
                                        parse_mode='html',
                                        reply_markup=video_url_and_favorites_list_button_creator(key))
         return
-    # API
-    else:
+    else:  # KinoPoiskWebPage
+        logger.info("By KinoPoisk")
         try:
             links = VX().get_film_link_by_name(query_film)
             if links:

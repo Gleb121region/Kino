@@ -29,7 +29,7 @@ def __get_movie_by_X(query):
                     movie_rating=movie_rating,
                     movie_poster_url=movie_poster_url)
 
-                movie_video_url = VX().get_film_link_by_kinopoisk_id(int(movie_id))
+                movie_video_url = VX().get_film_link_by_kinoP_id(int(movie_id))
                 my_Dict = {movie_video_url: text}
                 list_dict.append(my_Dict)
         else:
@@ -96,7 +96,7 @@ def add_movie(film_id, name, year, length, country, genre, rating, poster):
             genre = re.findall(r"'(.*?)'", str(genre))[1::2]
             genre = re.sub(r"\[|'|\]", "", str(genre))
 
-            movie_video_url = VX().get_film_link_by_kinopoisk_id(film_id)
+            movie_video_url = VX().get_film_link_by_kinoP_id(film_id)
             if movie_video_url is not None:
                 models.Movie.create(movie_id=film_id,
                                     movie_title=str(name).lower().capitalize(),

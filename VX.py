@@ -32,13 +32,13 @@ class VX(object):
                 movie_poster_url = item.poster
                 movie_year = re.search(r'\d+', str(item.year)).group(0)
                 movie_len = re.search(r'\d+', str(item.length)).group(0)
-                movie_country = ' '.join(map(str, re.findall(r'\w+', str(item.country))[1:]))
-                movie_genre = re.sub(r"\[|'|\]", "", str(item.genre))
+                movie_country =  re.sub(r"[(\['\])]", '', str(item.country))[:-1]
+                movie_genre = re.sub(r"[\['\]]", '', str(item.genre))
                 movie_rating = re.search(r'\d+\.\d+', str(item.rating)).group(0)
                 text = stencil(movie_title, movie_poster_url, movie_year, movie_len, movie_country, movie_genre,
                                movie_rating)
                 movie_id = re.search(r'\d+', str(item.film_id)).group(0)
-                movie_video_url = self.get_film_link_by_kinopoisk_id(int(movie_id))
+                movie_video_url = self.get_film_link_by_kinoP_id(int(movie_id))
                 with models.db:
                     models.Movie.create(movie_id=movie_id,
                                         movie_title=movie_title.lower().capitalize(),
@@ -55,12 +55,12 @@ class VX(object):
                 return list_links
         return list_links
 
-    def get_film_link_by_kinopoisk_id(self, kinopoisk_id: int) -> str | None:
-        params = dict(api_token=self.__API_TOKEN, kinopoisk_id=kinopoisk_id)
+    def get_film_link_by_kinoP_id(self, kinoP_id: int) -> str | None:
+        params = dict(api_token=self.__API_TOKEN, kinopoisk_id=kinoP_id)
         json_data = json.loads(self.get_json_by_url(params))
         jsonpath_expression = parse('$.data[*].iframe_src')
         match = jsonpath_expression.find(json_data)
         if len(match) > 0:
-            return str(match[0].value).replace("//", '')
+            return str(match[0].value).replace('//', '')
         else:
             return None
