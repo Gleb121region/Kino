@@ -1,3 +1,5 @@
+import re
+
 import requests
 from bs4 import BeautifulSoup
 from kinopoisk.movie import Movie
@@ -18,27 +20,23 @@ class Searcher(object):
 
     def parse(self, query: str) -> list[dict[str, str]]:
         html = self.__give_html(query)
+        list_film_id = []
         if html is None:
-            list_film_id = []
-            for i in range(5):
-                movie = Movie.objects.search(query)[i]
-                movie_id = movie.id
+            movies = Movie.objects.search(query)[:5]
+            for movie in movies:
                 movie_name = movie.name
                 if movie_name.casefold() == query.casefold():
-                    my_dict = {'film_name': movie_name, 'film_id': movie_id}
+                    my_dict = {'film_name': movie_name, 'film_id': movie.id}
                     list_film_id.append(my_dict)
-            return list_film_id
-        soup = BeautifulSoup(html, "lxml")
-        list_film_id = []
-        tmp_href = ''
-        for a in (a_data_id for a_data_id in soup.select('a[data-id]') if
-                  a_data_id.get('data-id') is not None and a_data_id.get('data-type') != 'person'):
-            href = a.get('href')
-            if href.endswith('sr/1/') and a.text != '':
-                if href != tmp_href:
-                    print(a.text)
-                    film_name = a.text.replace('\xa0', ' ').replace(' (сериал)'.casefold(), '').replace(
-                        '(мини-сериал)'.casefold(), '').strip()
+        else:
+            soup = BeautifulSoup(html, "lxml")
+            tmp_href = ''
+            for a in soup.find_all('a', attrs={'data-id': True, 'data-type': lambda x: x != 'person'}):
+                href = a.get('href')
+                if href.endswith('sr/1/') and a.text != '' and href != tmp_href:
+                    film_name_no_special_characters = re.sub('\xa0', ' ', a.text).strip()
+                    film_name = ' '.join(word for word in film_name_no_special_characters.split() if
+                                         not word.startswith('(') and not word.endswith(')'))
                     if film_name.casefold() == query.casefold():
                         my_dict = {'film_name': film_name, 'film_id': a.get('data-id')}
                         list_film_id.append(my_dict)

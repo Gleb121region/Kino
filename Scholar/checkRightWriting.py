@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import requests
 from jsonpath_ng import parse
@@ -39,7 +40,7 @@ def check_text_for_correct_spelling(text: str) -> str | None:
         else:
             right_writing = spell.correction(word)
             if right_writing is not None:
-                normal = text.replace(word, right_writing)
+                normal = re.sub(word, right_writing, text)
                 return normal
             else:
                 answer = check_the_correct_spelling_on_the_internet(text)

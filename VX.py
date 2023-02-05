@@ -61,6 +61,6 @@ class VX(object):
         jsonpath_expression = parse('$.data[*].iframe_src')
         match = jsonpath_expression.find(json_data)
         if len(match) > 0:
-            return str(match[0].value).replace('//', '')
+            return str(match[0].value)[2:]
         else:
             return None
