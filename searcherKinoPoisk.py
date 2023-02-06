@@ -34,7 +34,13 @@ class Searcher(object):
             for a in soup.find_all('a', attrs={'data-id': True, 'data-type': lambda x: x != 'person'}):
                 href = a.get('href')
                 if href.endswith('sr/1/') and a.text != '' and href != tmp_href:
-                    film_name_no_special_characters = re.sub('\xa0', ' ', a.text).strip()
+                    film_name_no_special_characters = a.text
+
+                    if '\xa0' in film_name_no_special_characters:
+                        film_name_no_special_characters = re.sub('\xa0', ' ', a.text).strip()
+                    if '–' in film_name_no_special_characters:
+                        film_name_no_special_characters = re.sub('[–—]', '-', a.text).strip()
+
                     film_name = ' '.join(word for word in film_name_no_special_characters.split() if
                                          not word.startswith('(') and not word.endswith(')'))
                     if film_name.casefold() == query.casefold():

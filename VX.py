@@ -6,7 +6,6 @@ import requests
 from jsonpath_ng import parse
 
 from Data.Billboard import Cinema
-from Model import models
 from Text.messagesPattern import stencil
 
 
@@ -28,27 +27,26 @@ class VX(object):
             jsonpath_expression = parse('$.data[*].iframe_src')
             match = jsonpath_expression.find(json_data)
             if len(match) > 0:
-                movie_title = re.search(r'[\w+-?\s+]+', str(item.name)).group(0)
+                movie_title = item.name
                 movie_poster_url = item.poster
-                movie_year = re.search(r'\d+', str(item.year)).group(0)
-                movie_len = re.search(r'\d+', str(item.length)).group(0)
-                movie_country =  re.sub(r"[(\['\])]", '', str(item.country))[:-1]
-                movie_genre = re.sub(r"[\['\]]", '', str(item.genre))
-                movie_rating = re.search(r'\d+\.\d+', str(item.rating)).group(0)
-                text = stencil(movie_title, movie_poster_url, movie_year, movie_len, movie_country, movie_genre,
+                movie_year = item.year
+                movie_len = item.length
+                movie_country = re.sub(r'[(\[\'\])]', '', str(item.country))
+                movie_genre = re.sub(r'[(\[\'\])]', '', str(item.genre))
+                movie_rating = item.rating
+                text = stencil(item.name, movie_poster_url, movie_year, movie_len, movie_country, movie_genre,
                                movie_rating)
                 movie_id = re.search(r'\d+', str(item.film_id)).group(0)
                 movie_video_url = self.get_film_link_by_kinoP_id(int(movie_id))
-                with models.db:
-                    models.Movie.create(movie_id=movie_id,
-                                        movie_title=movie_title.lower().capitalize(),
-                                        movie_poster_url=movie_poster_url,
-                                        movie_video_url=movie_video_url,
-                                        movie_len=movie_len,
-                                        movie_year=movie_year,
-                                        movie_country=movie_country,
-                                        movie_genre=movie_genre,
-                                        movie_rating=movie_rating)
+                from DatabaseHandler import add_movie
+                add_movie(film_id=movie_id,
+                          name=movie_title.lower().capitalize(),
+                          poster=movie_poster_url,
+                          length=movie_len,
+                          year=movie_year,
+                          country=movie_country,
+                          genre=movie_genre,
+                          rating=movie_rating)
                 my_dict = {movie_video_url: text}
                 list_links.append(my_dict)
             else:

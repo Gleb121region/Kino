@@ -1,6 +1,5 @@
 import asyncio
 import os
-import traceback
 
 from loguru import logger
 from telebot import asyncio_filters
@@ -58,8 +57,8 @@ async def send_welcome(message: types.Message):
 # команда для отправления топа фильмов
 @bot.message_handler(commands=['top'])
 async def send_top_film(message: types.Message):
+    page_number = 1
     try:
-        page_number = 1
         billboard = KinoPoisk().give_top_films(page_number)
         for film_info in billboard.send_message_in_tg():
             for key, value in film_info.items():
@@ -109,8 +108,8 @@ async def handler_send_recommendation(message: types.Message):
 
 @bot.message_handler(state=Movie.name)
 async def send_recommendation(message: types.Message):
+    film_name = message.text.lower().capitalize()
     try:
-        film_name = message.text.lower().capitalize()
         message_for_user = if_like_text.format(film_name)
         await bot.send_message(message.chat.id, message_for_user)
         list_similar_films = KinoPoisk().give_recommendations(str(film_name))
@@ -140,8 +139,8 @@ async def handler_send_film_by_keyword(message: types.Message):
 @bot.message_handler(state=Keyword.word)
 async def send_film_by_keyword(message: types.Message):
     page_number = 1
+    keyword = message.text.lower().capitalize()
     try:
-        keyword = message.text.lower().capitalize()
         billboard = KinoPoisk().give_films_by_keyword(keyword=str(keyword), page_number=page_number)
         for film_info in billboard.send_message_in_tg():
             for key, value in film_info.items():
@@ -209,10 +208,10 @@ async def callback_query(call):
 #  поиск фильмов
 @bot.message_handler(func=lambda message: True)
 async def send_film_by_film_name(message):
-    query_film: str = message.text.lower().capitalize()
+    query_film: str = re.sub('[—–]', '-', message.text.lower().capitalize())
     logger.info(query_film)
     links = get_movie_by_film_title(query_film)
-    if links:  # DB
+    if links:
         logger.info("DB")
         for link in links:
             for key, value in link.items():
@@ -221,7 +220,7 @@ async def send_film_by_film_name(message):
                                        parse_mode='html',
                                        reply_markup=video_url_and_favorites_list_button_creator(key))
         return
-    else:  # KinoPoiskWebPage
+    else:
         logger.info("By KinoPoisk")
         try:
             links = VX().get_film_link_by_name(query_film)

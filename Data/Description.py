@@ -1,5 +1,5 @@
 class Description(object):
-    def __init__(self, poster, rating, year, country, genre, length):
+    def __init__(self, poster: str, rating: float | int, year: int, country: str, genre: str, length: int):
         self.poster = poster,
         self.rating = rating,
         self.year = year,
