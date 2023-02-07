@@ -24,7 +24,7 @@ class Billboard(object):
             movie_poster_url = cinemas.poster
             movie_year = re.search(r'\d+', str(cinemas.year)).group(0)
             movie_length = hms_to_s(re.search(r'\d+', str(cinemas.length)).group(0))
-            movie_country = ' '.join(map(str, re.findall(r'\w+', str(cinemas.country))[1:]))
+            movie_country = ' '.join(map(str, re.findall(r'\w+', str(cinemas.country))[0:]))
             movie_genre = ' '.join(map(str, re.findall(r'\w+', str(genre_str))[0:]))
             movie_rating = re.search(r'\d+\.\d+', str(cinemas.rating)).group(0)
 

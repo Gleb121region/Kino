@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import traceback
 
 import requests
 from jsonpath_ng import parse
@@ -10,7 +11,7 @@ from Data.Cinema import Cinema
 from Data.Description import Description
 from Data.Film import Film
 from DatabaseHandler import add_movie
-from Text.regexText import regex_for_word, regex_for_url
+from Text.regexText import regex_for_word, regex_for_url, regex_for_rating, regex_for_digit
 from converterStringDataToMinet import hms_to_s
 from jsonSearcher import retrieve_value_by_key
 from searcherKinoPoisk import Searcher
@@ -32,7 +33,7 @@ class KinoPoisk(object):
                 else:
                     pass
             except (ConnectionError, json.JSONDecodeError) as error:
-                print(error)
+                print(traceback.format_exc())
 
     def __give_data_about_film(self, id_kino_poisk: int) -> Description:
         json_data = self.__get_json_by_url(url=self.__URL + str(id_kino_poisk))
@@ -87,6 +88,7 @@ class KinoPoisk(object):
         movie_dict_list = Searcher().parse(query=movie_name)
         self.__id_kino_poisk = str(movie_dict_list[0]['film_id'])
 
+
     def give_recommendations(self, movie_title: str) -> list[Film]:
         self.set_id_kino_poisk(movie_title)
         url: str = self.__URL + self.__id_kino_poisk + '/similars'
@@ -94,15 +96,19 @@ class KinoPoisk(object):
         movies_title = retrieve_value_by_key(json_data, parse('$.items[*].nameRu'))
         movies_id = retrieve_value_by_key(json_data, parse('$.items[*].filmId'))
         list_films: list[Film] = []
-        for movie_title, movie_id in zip(movies_title, movies_id):
-            film_id = int(movie_id.value)
-            film_name = movie_title.value
+        for i in range(len(movies_id)):
+            film_id = int(movies_id[i].value)
+            film_name = movies_title[i].value
             description = self.__give_data_about_film(film_id)
-            print(description.genre)
-            add_movie(film_id, film_name,
-                      description.year, description.length,
-                      description.country, description.genre,
-                      description.rating, description.poster)
+
+            year = re.search(regex_for_digit, str(description.year)).group(0)
+            length = re.search(regex_for_digit, str(description.length)).group(0)
+            country = re.search(regex_for_word, str(description.country)).group(0)
+            genre = re.search(regex_for_word, str(description.genre)).group(0)
+            rating = re.search(regex_for_rating, str(description.rating)).group(0)
+            poster = re.search(regex_for_url, str(description.poster)).group(0)
+
+            add_movie(film_id, film_name, year, length, country, genre, rating, poster)
             film_info = Film(film_name=film_name, film_id=film_id, description=description)
             list_films.append(film_info)
         return list_films
@@ -143,6 +149,7 @@ class KinoPoisk(object):
                           cinema.country, cinema.genre, cinema.rating, cinema.poster)
         return Billboard(list_cinema_clear)
 
+    #  доделать…
     def send_spin_offs(self, movie_name: str) -> list[Film]:
         self.set_id_kino_poisk(movie_name)
         url = f'https://kinopoiskapiunofficial.tech/api/v2.1/films/{int(self.__id_kino_poisk)}/sequels_and_prequels'
