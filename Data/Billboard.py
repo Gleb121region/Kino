@@ -2,6 +2,7 @@ import re
 
 from Data import Cinema
 from Text.messagesPattern import stencil
+from Text.regexText import *
 from converterStringDataToMinet import hms_to_s
 
 
@@ -20,20 +21,20 @@ class Billboard(object):
                 if isinstance(genre, str):
                     genre_str += genre + ' '
 
-            movie_title = re.search(r'[\w+\s+]+', str(cinemas.name)).group(0)
-            movie_poster_url = cinemas.poster
-            movie_year = re.search(r'\d+', str(cinemas.year)).group(0)
-            movie_length = hms_to_s(re.search(r'\d+', str(cinemas.length)).group(0))
-            movie_country = ' '.join(map(str, re.findall(r'\w+', str(cinemas.country))[0:]))
-            movie_genre = ' '.join(map(str, re.findall(r'\w+', str(genre_str))[0:]))
-            movie_rating = re.search(r'\d+\.\d+', str(cinemas.rating)).group(0)
+            movie_title = re.search(regex_for_title, str(cinemas.name)).group(0)
+            movie_poster_url = re.search(regex_for_url, cinemas.poster).group(0)
+            movie_year = re.search(regex_for_digit, str(cinemas.year)).group(0)
+            movie_length = hms_to_s(re.search(regex_for_digit, str(cinemas.length)).group(0))
+            movie_country = ' '.join(map(str, re.findall(regex_for_word_and_space, str(cinemas.country))[0:]))
+            movie_genre = ' '.join(map(str, re.findall(regex_for_word_and_space, str(genre_str))[0:]))
+            movie_rating = re.search(regex_for_rating, str(cinemas.rating)).group(0)
 
             text = stencil(movie_title, movie_poster_url, movie_year, movie_length, movie_country, movie_genre,
                            movie_rating)
 
-            movie_id = re.search(r'\d+', str(cinemas.film_id)).group(0)
-            from VX import VX
-            movie_video_url = VX().get_film_link_by_kinoP_id(int(movie_id))
+            movie_id = re.search(regex_for_digit, str(cinemas.film_id)).group(0)
+            from webServase.VideoCDN import VideoCDN
+            movie_video_url = VideoCDN().get_film_link_by_kinoP_id(int(movie_id))
             if isinstance(movie_video_url, str):
                 MyDictionary = {movie_video_url: text}
                 list_film_about.append(MyDictionary)

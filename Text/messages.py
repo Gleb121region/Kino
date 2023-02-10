@@ -2,12 +2,12 @@ add_to_favorites_text = 'Добавить в избранное'
 view_link_text = 'Посмотреть'
 attention_text = 'Следующие кинопроизведения'
 enter_movie_title_text = 'Введите название кинопроизведения'
-add_a_movie_to_favorites_text = 'Фильм добавлен в избранные'
+add_movie_to_favorites_text = 'Фильм добавлен в избранные'
 
 next_button_text = 'Вперёд --->'
 back_button_text = '<--- Назад'
 
-if_like_text = 'Если вам понравится этот фильм скоро отправим вам похожие фильмы'
+recommendation_text = 'Фильмы, рекомендованные пользователям, которым понравился фильм'
 
 enter_key_word_text = 'Введите ключевые слова'
 

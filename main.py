@@ -9,10 +9,10 @@ from telebot.asyncio_storage import StateMemoryStorage
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from DatabaseHandler import *
-from KinoPoisk import KinoPoisk
 from Model import models
 from States.states import Movie, Keyword, Cinematography
 from Text.messages import *
+from webServase.KinopoiskAPIUnofficial import KinopoiskAPIUnofficial
 
 bot = AsyncTeleBot(os.getenv('telegram_token'), state_storage=StateMemoryStorage())
 
@@ -57,9 +57,10 @@ async def send_welcome(message: types.Message):
 # команда для отправления топа фильмов
 @bot.message_handler(commands=['top'])
 async def send_top_film(message: types.Message):
+    logger.info("command TOP")
     page_number = 1
     try:
-        billboard = KinoPoisk().give_top_films(page_number)
+        billboard = KinopoiskAPIUnofficial().give_top_films(page_number)
         for film_info in billboard.send_message_in_tg():
             for key, value in film_info.items():
                 await bot.send_message(message.chat.id,
@@ -110,9 +111,8 @@ async def handler_send_recommendation(message: types.Message):
 async def send_recommendation(message: types.Message):
     film_name = message.text.lower().capitalize()
     try:
-        message_for_user = if_like_text.format(film_name)
-        await bot.send_message(message.chat.id, message_for_user)
-        list_similar_films = KinoPoisk().give_recommendations(str(film_name))
+        await bot.send_message(message.chat.id, recommendation_text + film_name)
+        list_similar_films = KinopoiskAPIUnofficial().give_recommendations(str(film_name))
         for film in list_similar_films:
             for key, value in film.send_info_about_film().items():
                 await bot.send_message(message.chat.id,
@@ -141,7 +141,7 @@ async def send_film_by_keyword(message: types.Message):
     page_number = 1
     keyword = message.text.lower().capitalize()
     try:
-        billboard = KinoPoisk().give_films_by_keyword(keyword=str(keyword), page_number=page_number)
+        billboard = KinopoiskAPIUnofficial().give_films_by_keyword(keyword=str(keyword), page_number=page_number)
         for film_info in billboard.send_message_in_tg():
             for key, value in film_info.items():
                 await bot.send_message(message.chat.id,
@@ -168,7 +168,7 @@ async def handler_send_background(message: types.Message):
 async def send_background(message: types.Message):
     film_name = message.text.lower().capitalize()
     try:
-        for film in KinoPoisk().send_spin_offs(film_name):
+        for film in KinopoiskAPIUnofficial().send_spin_offs(film_name):
             for key, value in film.send_info_about_film().items():
                 await bot.send_message(message.chat.id,
                                        value,
@@ -185,7 +185,7 @@ async def send_background(message: types.Message):
 async def callback_query(call):
     digit = call.data
     if len(digit) == 1:
-        kino = KinoPoisk()
+        kino = KinopoiskAPIUnofficial()
         page_number = int(digit)
         billboard = kino.give_top_films(page_number)
         for film_info in billboard.send_message_in_tg():
@@ -202,7 +202,7 @@ async def callback_query(call):
     else:
         add_favourite_movie(user_id=call.from_user.id, movie_id=int(digit))
 
-    await bot.send_message(call.message.chat.id, add_a_movie_to_favorites_text, disable_notification=True)
+    await bot.send_message(call.message.chat.id, add_movie_to_favorites_text, disable_notification=True)
 
 
 #  поиск фильмов
@@ -219,11 +219,10 @@ async def send_film_by_film_name(message):
                                        value,
                                        parse_mode='html',
                                        reply_markup=video_url_and_favorites_list_button_creator(key))
-        return
     else:
         logger.info("By KinoPoisk")
         try:
-            links = VX().get_film_link_by_name(query_film)
+            links = VideoCDN().get_film_link_by_name(query_film)
             if links:
                 for link in links:
                     for key, value in link.items():

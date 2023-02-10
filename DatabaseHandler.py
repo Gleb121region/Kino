@@ -3,7 +3,8 @@ import traceback
 
 from Model import models
 from Text import messagesPattern
-from VX import VX
+from Text.regexText import regex_for_county, regex_for_genre
+from webServase.VideoCDN import VideoCDN
 
 
 def __get_movie_by_X(query):
@@ -22,7 +23,7 @@ def __get_movie_by_X(query):
                 movie_poster_url = movie.get('movie_poster_url')
 
                 text = messagesPattern.stencil(
-                    movie_title=re.sub(''),
+                    movie_title=movie_title,
                     movie_length=movie_len,
                     movie_year=movie_year,
                     movie_genre=movie_genre,
@@ -30,7 +31,7 @@ def __get_movie_by_X(query):
                     movie_rating=movie_rating,
                     movie_poster_url=movie_poster_url)
 
-                movie_video_url = VX().get_film_link_by_kinoP_id(int(movie_id))
+                movie_video_url = VideoCDN().get_film_link_by_kinoP_id(int(movie_id))
                 my_Dict = {movie_video_url: text}
                 list_dict.append(my_Dict)
         else:
@@ -101,11 +102,11 @@ def add_user(user_id, username, full_name):
 def add_movie(film_id, name, year, length, country, genre, rating, poster):
     with models.db:
         try:
-            from VX import VX
+            from webServase.VideoCDN import VideoCDN
             if __check_movie_by_id(film_id) == 0:
-                country = re.sub(r'[\[\'\]]', "", str(country))
-                genre = re.sub(r'[\[\'\]]', "", str(genre))
-                movie_video_url = VX().get_film_link_by_kinoP_id(film_id)
+                country = re.sub(regex_for_county, '', str(country))
+                genre = re.sub(regex_for_genre, '', str(genre))
+                movie_video_url = VideoCDN().get_film_link_by_kinoP_id(film_id)
                 if movie_video_url is not None:
                     models.Movie.create(movie_id=int(film_id),
                                         movie_title=str(name).lower().capitalize(),
@@ -119,12 +120,3 @@ def add_movie(film_id, name, year, length, country, genre, rating, poster):
                                         )
         except Exception as e:
             print(traceback.format_exc())
-            print(int(film_id))
-            print(str(name).lower().capitalize())
-            print(rating)
-            print(genre)
-            print(poster)
-            print(length)
-            print(year)
-            print(country)
-            print(movie_video_url)
